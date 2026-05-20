@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Full Phase 2 on all open-data matches (run in Terminal — not Cursor agent)
+# Full Phase 2 on all open-data matches (34-match Bundesliga sample)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source .venv/bin/activate

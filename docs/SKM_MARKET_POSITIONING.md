@@ -1,6 +1,6 @@
 # SKM vs market stats — positioning
 
-Use this when writing the blog, README, or talking to scouts. **SKM v1 is not claiming to replace the transfer market.**
+Guidance for publications, comparisons, and scouting discussions. **SKM v1 does not replace the transfer market or full scouting workflows.**
 
 ---
 
@@ -96,7 +96,7 @@ Tier 3: merge [`data/external/bundesliga_2324_benchmarks.csv`](../data/external/
 
 ---
 
-## References for blog
+## See also
 
 - [ROADMAP.md](ROADMAP.md) — phases
 - [RELATED_WORK.md](RELATED_WORK.md) — VAEP, xT

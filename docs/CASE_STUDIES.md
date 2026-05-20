@@ -1,68 +1,54 @@
-# Tier 4 — Player case studies (blog template)
+# Example player narratives
 
-Illustrative players from the **StatsBomb open Bundesliga 2023/24 sample** (34 matches). Ranks are approximate from `player_leaderboard.parquet` on that sample—not full-season minutes or fixtures. **Clip IDs and exact ranks TBD** for the blog.
+Illustrative comparisons from the **StatsBomb open Bundesliga 2023/24 sample** (34 matches). Ranks are approximate on that sample—not full-season minutes or fixtures. FotMob figures are season benchmarks from `data/external/bundesliga_2324_benchmarks.csv`.
 
-**How to refresh:** `skm-validate` → `data/reports/validation_disagreements.csv` (sort by `skm_minus_outcome_rank`).
-
----
-
-## Bucket A — Elite SKM + elite outcomes
-
-*Expectation: top SKM and strong goals/xG — SKM does not ignore stars.*
-
-| Player | SKM rank (sample) | Goals+xG rank (sample) | Story | Clip / match |
-|--------|-------------------|------------------------|-------|--------------|
-| Florian Wirtz | Top tier | Top tier | Creative hub: high ΔP actions with strong box-score contribution; aligns with FotMob ~7.73 on full season. | TBD |
-| Alejandro Grimaldo | Top tier | Top tier | Attacking full-back: crosses, progressive carries, set-piece threat; FotMob ~7.98 BL 23/24. | TBD |
+Regenerate disagreement tables: `skm-validate` → `data/reports/validation_disagreements.csv`.
 
 ---
 
-## Bucket B — High SKM, modest box score (“hidden influence”)
+## Elite SKM and strong outcomes
 
-*Expectation: supports chain-reaction thesis — valuable actions without headline G+A.*
+Players who score well on both process (SKM) and box-score outcomes.
 
-| Player | SKM rank (sample) | Goals+xG rank (sample) | skm_minus_outcome_rank | Story | Clip |
-|--------|-------------------|------------------------|------------------------|-------|------|
-| Nathan Tella | Very high | Moderate | Positive | Top SKM per90 on sample; 5G/2A in benchmarks but FotMob ~7.13 — process > reputation. | TBD |
-| Victor Okoh Boniface | Very high | Moderate | Positive | Similar: strong SKM, 14G/8A season context, FotMob ~7.16 — high impact per action in sample. | TBD |
-
----
-
-## Bucket C — High box score, lower SKM
-
-*Expectation: finisher or volume scorer; SKM may rank below pure outcome leaders.*
-
-| Player | SKM rank (sample) | Goals+xG rank (sample) | Story | Clip |
-|--------|-------------------|------------------------|-------|------|
-| Harry Kane | Moderate (reference) | Elite | 36 goals BL 23/24, FotMob ~7.98 — elite finisher; use as “market knows outcomes” anchor vs SKM process story. | TBD |
+| Player | SKM (sample) | Outcomes (sample) | Notes |
+|--------|--------------|-------------------|-------|
+| Florian Wirtz | Top tier | Top tier | High ΔP and strong creation; FotMob ~7.73 (full season) |
+| Alejandro Grimaldo | Top tier | Top tier | Attacking full-back profile; FotMob ~7.98 (full season) |
 
 ---
 
-## Bucket D — Same team, same position
+## High SKM, modest public rating (“hidden influence”)
 
-*Expectation: SKM differentiates two players in the same role on one squad.*
+Supports the idea that chain value can exceed reputation or headline G+A on a per-action basis.
 
-| Player A | Player B | Team | SKM per90 (A vs B) | What SKM captures differently |
-|----------|----------|------|--------------------|------------------------------|
-| _TBD_ | _TBD_ | e.g. Leverkusen CM pair | | Pick from leaderboard after full run |
-
----
-
-## Bucket E — SKM vs public rating disagreement
-
-*From `data/external/bundesliga_2324_benchmarks.csv` + sample leaderboard.*
-
-| Player | SKM rank (sample) | FotMob BL 23/24 | Story (reputation vs process) |
-|--------|-------------------|-----------------|------------------------------|
-| Granit Xhaka | Lower on v1 SKM | **~8.18** | Archetype for v2: elite public rating and structural midfield work vs attack-leaning ΔP sum in v1. |
-| Exequiel Palacios | TBD | **~8.05** | League-top FotMob rating; compare SKM once matched on minutes in sample. |
+| Player | SKM (sample) | Outcomes (sample) | Notes |
+|--------|--------------|-------------------|-------|
+| Nathan Tella | Very high | Moderate | Top SKM per90 on sample; FotMob ~7.13 |
+| Victor Okoh Boniface | Very high | Moderate | Strong SKM; 14G/8A season context; FotMob ~7.16 |
 
 ---
 
-## Checklist before publishing blog
+## High box score, moderate SKM
 
-- [x] At least **8 named players** across buckets (illustrative)
-- [ ] One **scatter plot** from `data/reports/scatter_skm_vs_goals_xg.png` (generate locally)
-- [ ] One **Spearman table** from `tier2_spearman.csv` (generate locally)
-- [ ] State sample size (34 matches, minutes from actions, sklearn VAEP)
-- [ ] Credit StatsBomb open data
+Finisher / outcome-led profiles where SKM is not dominated by goals alone.
+
+| Player | SKM (sample) | Outcomes (sample) | Notes |
+|--------|--------------|-------------------|-------|
+| Harry Kane | Moderate | Elite | 36 goals BL 23/24; anchor for “market knows outcomes” |
+
+---
+
+## SKM vs public rating disagreement
+
+Cases that motivate moment-based v2 (structural / midfield work vs attack-leaning ΔP sum).
+
+| Player | SKM (sample) | FotMob BL 23/24 | Notes |
+|--------|--------------|-----------------|-------|
+| Granit Xhaka | Lower on v1 | ~8.18 | Elite public rating; v1 underrates structural midfield impact |
+| Exequiel Palacios | — | ~8.05 | League-top FotMob rating; compare when matched on sample minutes |
+
+---
+
+## Same team, same position
+
+Use the leaderboard to compare teammates in the same role (e.g. two central midfielders on one club) after running the full pipeline.

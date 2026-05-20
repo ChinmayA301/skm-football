@@ -47,4 +47,4 @@ SKM_i = ΔP_i × (1 + w_d·D_i + w_c·C_i + w_r·R_i)
 
 ## Future work
 
-SKM v1 is an action-level proxy (**SKM-Chance**). The target metric credits players for **match moments** and rolls up to one `skm_per90`. See [ROADMAP.md](ROADMAP.md) for Phases 5–8 (moment segmentation, chance + control layers, unified SKM, context, AI).
+SKM v1 is an action-level proxy (**SKM-Chance**). The target metric credits players for **match moments** and rolls up to one `skm_per90`. See [ROADMAP.md](ROADMAP.md).

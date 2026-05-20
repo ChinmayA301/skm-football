@@ -1,42 +1,43 @@
-# SKM Build Progress
+# Project status
 
-**v1 = SKM-Chance** (action-level proxy). **v2 = unified `skm_per90`** from moment credits ([Phase 6](docs/ROADMAP.md)).
+**Current release:** v0.1.0 — SKM-Chance (action-level proxy)  
+**Next major milestone:** moment-based unified `skm_per90` ([roadmap](docs/ROADMAP.md))
 
-**Resume:** [docs/PICKUP.md](docs/PICKUP.md) · **v1 publish plan:** [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md) · **Master plan (Phases 1–8):** [docs/COMPLETE_BUILD_PLAN.md](docs/COMPLETE_BUILD_PLAN.md)
+## Completed
 
-## Phase 1: Data foundation
-- [x] Project scaffold (`pyproject.toml`, `src/skm`, README)
-- [x] StatsBomb ingest pipeline
-- [x] Event feature engineering (zone, progressive, scoreline, minute bucket)
-- [x] Full extract → `data/processed/events.parquet` (1. Bundesliga 2023/24, 34 matches, 137,765 events)
-- [x] Optional columns for validation: `shot_xg`, `pass_goal_assist` (re-run `skm-build-events` to refresh)
+### Data & pipeline
+- StatsBomb ingest and event features (Bundesliga 2023/24 open sample, 34 matches)
+- `skm-build-events` → `events.parquet`
+- `skm-build-scores` → `actions_scored.parquet`, `player_leaderboard.parquet`
 
-## Phase 2: Component models
-- [x] ΔP via sklearn VAEP fallback (`vaep_sklearn.py`, `vaep_delta.py`)
-- [x] Difficulty (D), Context (C), Role (R), xT, SKM combine
-- [x] Smoke test: `skm-build-scores --max-games 5` succeeded
-- [ ] **Full run:** `./scripts/run_full_phase2.sh` (all 34 matches — confirm in Terminal)
+### Models (v1)
+- VAEP ΔP via sklearn fallback
+- Difficulty (D), context (C), role (R), xT side column
+- SKM combine: `SKM_i = ΔP_i × (1 + 0.3·D + 0.3·C + 0.3·R)`
 
-## Phase 3: Validation & viz
-- [x] Streamlit app + **Validation** tab
-- [x] `skm-validate` / `scripts/validation_benchmarks.py`
-- [x] `skm-export-reports` (includes validation scatter + CSV)
-- [x] `notebooks/03_validation_benchmarks.ipynb`
-- [x] `data/external/bundesliga_2324_benchmarks.csv` (FotMob BL 23/24)
-- [x] `docs/CASE_STUDIES.md` (illustrative player buckets)
-- [x] `docs/RELATED_WORK.md`
+### Validation & UI
+- `skm-validate` (Tiers 1–3), `skm-export-reports`
+- Streamlit dashboard with validation tab
+- External benchmarks CSV (FotMob BL 23/24)
+- CI: pytest, ruff
 
-## Phase 4: Publish (GitHub v1)
-- [x] `docs/ROADMAP.md` (Phases 5–8)
-- [x] `docs/SKM_MARKET_POSITIONING.md`
-- [x] `docs/BUILD_PLAN.md` + `docs/COMPLETE_BUILD_PLAN.md` + `docs/PICKUP.md` (local plans for future sessions)
-- [x] README landing page + doc index
-- [x] Illustrative case studies (Tella, Boniface, Wirtz, Grimaldo, Xhaka, Kane)
-- [ ] Run `scripts/publish_to_github.sh skm-football YOUR_USERNAME` + `git push`
-- [ ] Blog post with charts from local `data/reports/`
-- [ ] Optional: Streamlit Community Cloud
+### Documentation
+- README, roadmap, market positioning, case studies, related work
+- Public repository: [github.com/ChinmayA301/skm-football](https://github.com/ChinmayA301/skm-football)
+
+## Planned
+
+| Phase | Focus |
+|-------|--------|
+| 5 | Moment segmentation and player involvement |
+| 5b | `skm_chance` + `skm_control` layers |
+| 6 | Single public `skm_per90` from moment credits |
+| 7 | Match-relative context (competition, pressure, lineups) |
+| 8 | Counterfactual / tracking / optional AI layer |
+
+See [docs/ROADMAP.md](docs/ROADMAP.md) for detail.
 
 ## Notes
-- v1 formula: `SKM_i = ΔP_i × (1 + w_d·D_i + w_c·C_i + w_r·R_i)`, weights 0.3
-- VAEP: sklearn GBM (no libomp / Homebrew required)
-- Validation: Tier 1 internal → Tier 2 outcomes → Tier 3 public CSV → Tier 4 narratives
+
+- Processed data and reports are local-only (see `.gitignore`); clone the repo and run the pipeline to generate them.
+- Full-sample scoring: `./scripts/run_full_phase2.sh`
