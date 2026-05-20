@@ -1,0 +1,23 @@
+.venv/
+test_venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+.env
+*.egg-info/
+dist/
+build/
+
+# Data (large; rebuild via CLI)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+data/reports/
+!data/external/
+!data/external/*.csv
+!data/external/README.md
+
+notebooks/.ipynb_checkpoints/

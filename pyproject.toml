@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "skm"
+version = "0.1.0"
+description = "Skill-Key Moments: chain-reaction football action valuation"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "pandas>=2.0.0,<2.3",
+    "numpy>=1.26.0,<2.0.0",
+    "pyarrow>=14.0.0",
+    "statsbombpy>=1.14.0",
+    "tqdm>=4.66.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.4.0",
+]
+model = [
+    "scipy>=1.13.1,<1.15",
+    "scikit-learn>=1.4.2,<1.6",
+    "socceraction>=1.5.0",
+    "multimethod>=1.8,<2.0",
+]
+app = [
+    "streamlit>=1.28.0",
+    "plotly>=5.18.0",
+    "matplotlib>=3.8.0",
+]
+
+[project.scripts]
+skm-build-events = "skm.data.pipeline:main"
+skm-build-scores = "skm.models.pipeline:main"
+skm-export-reports = "skm.viz.reports:main"
+skm-validate = "skm.viz.validation_cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/skm"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint.per-file-ignores]
+# Booster stubs must run before socceraction / xthreat imports
+"src/skm/models/pipeline.py" = ["E402"]
+"src/skm/models/vaep_sklearn.py" = ["E402"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
