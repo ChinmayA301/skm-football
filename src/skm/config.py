@@ -29,6 +29,16 @@ D_CLIP = (0.5, 3.0)
 C_CLIP = (0.5, 2.0)
 R_CLIP = (0.8, 1.5)
 
+# Adjusted SKM weighting layer (v1.5) — modest, disclosed priors
+POSITION_W_CLIP = (0.9, 1.25)
+ROLE_W_CLIP = (0.85, 1.2)
+GAME_STATE_W_CLIP = (0.6, 1.4)
+GAME_STATE_W_GARBAGE = 0.7  # |score_diff| >= 3
+GAME_STATE_W_LATE_CLOSE = 1.3  # minute >= 85 and |score_diff| <= 1
+SEQUENCE_SHOT_BOOST = 1.15  # non-shot actions in a chain ending in a shot
+SEQUENCE_CHAIN_GAP_S = 15.0
+SEQUENCE_MIN_CHAIN_LEN = 3
+
 # VAEP training
 VAEP_NR_ACTIONS = 10
 VAEP_NB_PREV_ACTIONS = 3

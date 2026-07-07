@@ -7,7 +7,8 @@ Open-source pipeline for **process-based player valuation** in football.
 **v0.1.0** · Bundesliga 2023/24 (StatsBomb open, 34 matches) · sklearn VAEP
 
 ```
-SKM_i = ΔP_i × (1 + 0.3·D_i + 0.3·C_i + 0.3·R_i)
+SKM_i      = ΔP_i × (1 + 0.3·D_i + 0.3·C_i + 0.3·R_i)
+AdjSKM_i   = SKM_i × position_w × role_w × game_state_w × sequence_w   (v1.5)
 ```
 
 Data: [StatsBomb open data](https://github.com/statsbomb/open-data) · Models: [socceraction](https://github.com/ML-KULeuven/socceraction) (VAEP, SPADL, xT)
@@ -57,6 +58,29 @@ skm-build-events
 ./scripts/run_full_phase2.sh
 skm-validate && skm-export-reports
 ```
+
+---
+
+## v1.5 — Adjusted SKM weighting layer
+
+On top of base SKM, each action gets four modest multiplicative weights
+(`src/skm/models/weights.py`), producing `adjusted_skm`:
+
+| Weight | What it captures | How it's built |
+|--------|------------------|----------------|
+| `position_weight` | Is this action type core to the player's position? (e.g. ST shot, DM interception, W take-on) | Hand-set prior table over StatsBomb starting positions × SPADL types, clipped 0.9–1.25 |
+| `role_weight` | Is this action type central to the player's *observed* role? | Role-cluster action rates vs global rates (data-driven), clipped 0.85–1.2 |
+| `game_state_weight` | Leverage: garbage time down (0.7 at ±3+), late close games up (1.3 at 85'+, ±1) | Running score + minute, clipped 0.6–1.4 |
+| `sequence_weight` | Credit the chain, not only the shooter | Non-shot actions in same-team chains ending in a shot get 1.15 |
+
+Design intent: a routine tap-in at 4–0 no longer gets the same boost as a
+late finish in a close game, and buildup actions before a shot share credit.
+
+**Caveats (disclosed, not hidden):** `position_weight` is a prior table, not a
+fitted model; `game_state_weight` overlaps partially with C (both kept small);
+sequence chains are a same-team/time-gap heuristic, not tracked possessions.
+The open sample has no knockout matches, so competition-stage weighting is
+deferred (see roadmap Phase 7).
 
 ---
 

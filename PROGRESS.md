@@ -15,6 +15,13 @@
 - Difficulty (D), context (C), role (R), xT side column
 - SKM combine: `SKM_i = ΔP_i × (1 + 0.3·D + 0.3·C + 0.3·R)`
 
+### Models (v1.5) — Adjusted SKM weighting layer
+- `adjusted_skm = skm × position_w × role_w × game_state_w × sequence_w`
+- Position priors from StatsBomb lineups (`src/skm/models/weights.py`)
+- Role weight from role-cluster action rates; game-state leverage weight;
+  sequence weight for chains ending in shots
+- `adjusted_skm_per90` in leaderboard and dashboard
+
 ### Validation & UI
 - `skm-validate` (Tiers 1–3), `skm-export-reports`
 - Streamlit dashboard with validation tab

@@ -20,7 +20,14 @@ from skm.config import (
 from skm.models.context import compute_context
 from skm.models.difficulty import compute_difficulty, fit_difficulty_model
 from skm.models.role import compute_role, fit_role_clusters
-from skm.models.skm_combine import combine_skm, player_leaderboard
+from skm.models.skm_combine import combine_adjusted_skm, combine_skm, player_leaderboard
+from skm.models.weights import (
+    attach_player_positions,
+    compute_game_state_weight,
+    compute_position_weight,
+    compute_role_weight,
+    compute_sequence_weight,
+)
 from skm.models.booster_compat import stub_broken_boosters
 from skm.models.spadl_convert import build_spadl_actions, resolve_competition_ids
 from skm.models.vaep_delta import rate_all_actions, train_vaep
@@ -86,6 +93,18 @@ def run_phase2(
         actions["xt_value"] = 0.0
 
     actions["skm"] = combine_skm(actions).values
+
+    # v1.5 weighting layer → adjusted_skm
+    try:
+        actions = attach_player_positions(actions)
+    except Exception as exc:
+        logger.warning("Position fetch failed (%s); position_weight=1.0", exc)
+        actions["position_group"] = None
+    actions["position_weight"] = compute_position_weight(actions).values
+    actions["role_weight"] = compute_role_weight(actions, role_state).values
+    actions["game_state_weight"] = compute_game_state_weight(actions, games).values
+    actions["sequence_weight"] = compute_sequence_weight(actions).values
+    actions["adjusted_skm"] = combine_adjusted_skm(actions).values
 
     return actions, games
 

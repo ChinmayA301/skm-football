@@ -42,11 +42,28 @@ with tab1:
     st.subheader("Player leaderboard")
     min_actions = st.slider("Minimum actions", 100, 800, 400, 50)
     show = board[board["n_actions"] >= min_actions] if "n_actions" in board.columns else board
-    metric = st.selectbox("Sort by", ["skm_per90", "delta_p_per90", "xt_per90"])
+    metric_options = [
+        m
+        for m in ["skm_per90", "adjusted_skm_per90", "delta_p_per90", "xt_per90"]
+        if m in show.columns
+    ]
+    metric = st.selectbox("Sort by", metric_options)
     show = show.sort_values(metric, ascending=False)
     st.dataframe(
         show[
-            [c for c in ["player", "player_id", "skm_per90", "delta_p_per90", "xt_per90", "n_actions"] if c in show.columns]
+            [
+                c
+                for c in [
+                    "player",
+                    "player_id",
+                    "skm_per90",
+                    "adjusted_skm_per90",
+                    "delta_p_per90",
+                    "xt_per90",
+                    "n_actions",
+                ]
+                if c in show.columns
+            ]
         ].head(50),
         use_container_width=True,
     )

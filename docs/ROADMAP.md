@@ -44,6 +44,27 @@ SKM_i = ΔP_i × (1 + 0.3·D_i + 0.3·C_i + 0.3·R_i)
 
 ---
 
+## v1.5 (released) — Adjusted SKM weighting layer
+
+```text
+adjusted_skm = skm × position_weight × role_weight × game_state_weight × sequence_weight
+```
+
+| Component | Status |
+|-----------|--------|
+| Position priors (StatsBomb lineups → position groups × SPADL types) | Done |
+| Role weight from role-cluster action rates | Done |
+| Game-state leverage weight (garbage time / late close) | Done |
+| Sequence weight (chains ending in shots share credit) | Done |
+| `adjusted_skm_per90` in leaderboard + dashboard | Done |
+
+**Known limits:** position weights are hand-set priors; sequence chains are a
+heuristic (same team, ≤15 s gaps), not tracked possessions; partial overlap
+between game-state weight and C. All weights are clipped to modest ranges so
+adjusted SKM stays close to base SKM until the priors are validated.
+
+---
+
 ## Phase 5 — Moment segmentation
 
 **Goal:** Unit of account = `moment_id`, not a single action.
