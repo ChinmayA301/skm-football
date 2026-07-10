@@ -31,6 +31,7 @@ flowchart LR
 |------|---------|--------|
 | Ingest + features | `skm-build-events` | `data/processed/events.parquet` |
 | VAEP + SKM | `skm-build-scores` | `actions_scored.parquet`, `player_leaderboard.parquet` |
+| Moments (Phase 5) | `skm-build-moments` | `moments.parquet`, `moment_players.parquet` |
 | Validation | `skm-validate` | `data/reports/` (generated locally) |
 | Dashboard | `streamlit run app/streamlit_app.py` | Interactive explorer |
 

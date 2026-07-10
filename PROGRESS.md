@@ -21,6 +21,15 @@
 - Role weight from role-cluster action rates; game-state leverage weight;
   sequence weight for chains ending in shots
 - `adjusted_skm_per90` in leaderboard and dashboard
+- Verified end-to-end on remote StatsBomb data (3-match run): 91% position
+  coverage, all weights within clips
+
+### Models (Phase 5) — Moment segmentation
+- `skm-build-moments` → `moments.parquet`, `moment_players.parquet`
+- Heuristic boundaries: team change, ≤20 s gaps, dead balls, 25-action cap
+- Moment types: open_play / set_piece / transition (regain + forward progress)
+- Per-player involvement shares (on-ball touch share)
+- 34-match sample: 12,172 moments; 7.3% contain a shot; median 3 actions
 
 ### Validation & UI
 - `skm-validate` (Tiers 1–3), `skm-export-reports`
@@ -36,8 +45,7 @@
 
 | Phase | Focus |
 |-------|--------|
-| 5 | Moment segmentation and player involvement |
-| 5b | `skm_chance` + `skm_control` layers |
+| 5b | `skm_chance` + `skm_control` layers, moment-level valuation |
 | 6 | Single public `skm_per90` from moment credits |
 | 7 | Match-relative context (competition, pressure, lineups) |
 | 8 | Counterfactual / tracking / optional AI layer |

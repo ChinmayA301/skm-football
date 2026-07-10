@@ -65,17 +65,29 @@ adjusted SKM stays close to base SKM until the priors are validated.
 
 ---
 
-## Phase 5 — Moment segmentation
+## Phase 5 (released) — Moment segmentation
 
 **Goal:** Unit of account = `moment_id`, not a single action.
 
-| Deliverable | Description |
-|-------------|-------------|
-| `src/skm/models/moments.py` | Possession phases, transitions, length caps |
-| `moments.parquet` | Boundaries + context at moment start |
-| `moment_players.parquet` | Involvement shares per player |
+| Deliverable | Status |
+|-------------|--------|
+| `src/skm/models/moments.py` — possession phases, transitions, set pieces, length caps | Done |
+| `moments.parquet` — boundaries + start context (score, minute, reason, type) | Done |
+| `moment_players.parquet` — per-player involvement shares | Done |
+| `skm-build-moments` CLI | Done |
 
-**Success criterion:** Same player, different matches → different moment portfolios.
+On the open 34-match sample: 12,172 moments (66.6% open play, 21.6% set
+piece, 11.8% transition), 7.3% containing a shot, median 3 actions per moment.
+
+**Success criterion** (same player, different matches → different moment
+portfolios): 53% of players show varying per-match moment counts on the
+34-match sample.
+
+**Known limits:** boundaries are heuristics (team change, ≤20 s gaps, dead
+balls, 25-action cap), not StatsBomb possession chains; attack direction is
+inferred from shot end locations; involvement is on-ball touch share only —
+pressers and off-ball runners enter in Phase 7 when pressure events are
+ingested.
 
 ---
 

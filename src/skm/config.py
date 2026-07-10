@@ -39,6 +39,12 @@ SEQUENCE_SHOT_BOOST = 1.15  # non-shot actions in a chain ending in a shot
 SEQUENCE_CHAIN_GAP_S = 15.0
 SEQUENCE_MIN_CHAIN_LEN = 3
 
+# Moment segmentation (Phase 5)
+MOMENT_GAP_S = 20.0  # time gap that ends a moment
+MOMENT_MAX_ACTIONS = 25  # length cap per moment
+TRANSITION_PROGRESS_M = 25.0  # net forward progress to call a regain a transition
+TRANSITION_WINDOW_ACTIONS = 4  # actions inspected for transition progress
+
 # VAEP training
 VAEP_NR_ACTIONS = 10
 VAEP_NB_PREV_ACTIONS = 3
@@ -52,3 +58,5 @@ ROLE_N_CLUSTERS = 7
 EVENTS_PARQUET = DATA_PROCESSED / "events.parquet"
 ACTIONS_SCORED_PARQUET = DATA_PROCESSED / "actions_scored.parquet"
 PLAYER_LEADERBOARD_PARQUET = DATA_PROCESSED / "player_leaderboard.parquet"
+MOMENTS_PARQUET = DATA_PROCESSED / "moments.parquet"
+MOMENT_PLAYERS_PARQUET = DATA_PROCESSED / "moment_players.parquet"
