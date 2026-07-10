@@ -71,3 +71,8 @@ MOMENT_PLAYERS_PARQUET = DATA_PROCESSED / "moment_players.parquet"
 PLAYER_CREDITS_PARQUET = DATA_PROCESSED / "player_credits.parquet"
 PLAYER_SKM_V2_PARQUET = DATA_PROCESSED / "player_skm_v2.parquet"
 GAMES_PARQUET = DATA_PROCESSED / "games.parquet"
+ACTIONS_360_PARQUET = DATA_PROCESSED / "actions_360.parquet"
+
+# 360 freeze-frame difficulty (Layer 3)
+PRESSURE_RADIUS_TIGHT_M = 5.0
+PRESSURE_RADIUS_WIDE_M = 10.0

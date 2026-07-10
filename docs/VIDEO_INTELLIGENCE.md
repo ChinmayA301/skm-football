@@ -1,0 +1,99 @@
+# Video Intelligence → Moment Metrics: Staged Architecture
+
+Can SKM run a video-ingestion → moment-metric pipeline instead of relying
+only on event data? **Yes — in stages, each of which must earn its keep on
+real data before the next.** This document is the honest capability map.
+
+```
+Stage 1 (SHIPPED)   StatsBomb 360 freeze frames → pressure geometry → D_360
+Stage 2 (PILOT)     User video → CV tracking → clock-synced context features
+Stage 3 (SCAFFOLD)  Expert pairwise preferences → reward model → calibration
+```
+
+---
+
+## Stage 1 — 360 freeze frames (shipped: `skm-build-360`)
+
+StatsBomb 360 *is* video intelligence: player positions extracted from
+broadcast frames at each event, quality-controlled and licensed. Open data
+covers **World Cup 2022 + Euro 2024 — 115 of our 216 matches**.
+
+Per event we compute: `nearest_def_m`, `n_def_5m`, `n_def_10m`,
+`n_def_ahead`, `n_visible` (see `src/skm/models/freeze_frame.py`), then
+refit the completion-difficulty model with real defender geometry → `D_360`
+and `skm_360`.
+
+**Prototype result (8 matches):** 86.9% event coverage;
+coef(nearest_def_m) = +1.0 (space → success, correct sign);
+corr(D, D_360) = 0.58 — geometry carries information the binary
+`under_pressure` flag does not; 34% of covered actions shift by >0.5 in D.
+
+**Limits (disclosed):** frames only show the camera's visible area
+(`n_visible` tracks this); no player identities in frames; no continuous
+tracking between events — off-ball runs are still invisible unless they
+happen to be in frame at an event.
+
+## Stage 2 — CV pilot on user-supplied video (design)
+
+Production video→event extraction is a research-lab problem (SoccerNet
+challenges exist precisely because it is unsolved at scale). What *is*
+tractable as a pilot, on a clip the user owns:
+
+1. **Detection**: YOLO-class model for players + ball per frame.
+2. **Tracking**: ByteTrack/BoT-SORT for identity persistence.
+3. **Homography**: pitch-line keypoints → map pixel coords to pitch coords
+   (SoccerNet-Calibration baselines; broadcast pans need per-shot refits).
+4. **Clock sync**: the replay tool (`skm-export-replay`) already syncs a
+   local clip to the match clock by offset — the same join attaches CV
+   tracks to event timestamps.
+5. **Features**: the *same* geometry as Stage 1 (defender distances,
+   density, lane occupancy) computed continuously rather than per event —
+   plus what 360 cannot give: off-ball runs between events, pressing
+   distances over time, team compactness curves.
+
+**What it buys SKM:** continuous D inputs, off-ball involvement for moment
+credits (the roadmap's "decoy runs" gap), pressing-moment detection.
+
+**What it costs:** per-broadcast homography drift, occlusions, no ground
+truth without labeled data. A pilot should validate against Stage 1: on a
+360-covered match, CV-derived defender density at event times must agree
+with freeze frames before any downstream use.
+
+**Rule:** no CV-derived numbers enter published leaderboards until they
+pass that agreement check. Demo ≠ measurement.
+
+## Stage 3 — Expert takes as training signal (scaffolded: `preference.py`)
+
+"Train on expert takes" has a trap: match ratings and pundit verdicts are
+**outcome-biased** — the exact bias SKM exists to correct. Regressing SKM
+onto FotMob ratings would just rebuild FotMob.
+
+The honest design is **pairwise moment preferences**:
+
+- Show an expert two moments (dashboard moment map / replay clips).
+- Ask: *which mattered more?* — comparing situations, not stat lines.
+- Learn a Bradley-Terry reward model over moment features
+  (`fit_preference_model` in `src/skm/models/preference.py`; recovers
+  ground-truth orderings on synthetic pairs, ρ > 0.9 in tests).
+
+This is the supervised core of RLHF. The RL expansion on top, when label
+volume justifies it: current weights (α, position priors, control
+multipliers) become the *policy*; the preference reward model scores
+proposed re-weightings; iterate. Until real labels exist, that loop is
+design, not code — `data/external/expert_moment_labels.csv` is a
+header-only template, deliberately unfilled.
+
+**Label sources worth pursuing:** your own annotation sessions first
+(cheap, immediate); then coaching-community sessions (each annotator
+tagged, inter-rater agreement reported before any training run).
+
+## Sequencing
+
+| Step | Gate to proceed |
+|---|---|
+| 1. `skm-build-360` full run | D_360 improves completion-model fit on held-out matches |
+| 2. Feed D_360 into skm/moments for the 360 slice | rank changes reviewed, documented |
+| 3. Collect ~200 expert pairs | inter-rater agreement > chance |
+| 4. Preference-calibrate moment values | held-out pair accuracy > 0.65 |
+| 5. CV pilot on one owned clip | agreement with 360 geometry at event times |
+| 6. RL loop over weightings | only after 3–5 hold |
