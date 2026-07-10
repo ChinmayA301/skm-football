@@ -59,6 +59,17 @@
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for detail.
 
+### Expanded sample + visuals (v0.2.0-dev)
+- Multi-competition pipeline (`--competitions "Name:Season,…"`): 216 matches
+  across Bundesliga 23/24, WC 2022, Euro 2024, Ligue 1 22/23, La Liga 20/21 —
+  487,561 scored actions, 233 players ≥400 actions (was 18)
+- Phase 6 checks on expanded sample: ρ(v2, ΔP)=0.964 ✅; ρ(v2, progressive)
+  =−0.19 ❌ (structural, see ROADMAP)
+- Dashboard: Moments tab (moment map, top moments, v1↔v2 movers)
+- `skm-export-replay`: self-contained HTML match replay with live SKM
+  overlays + optional local-video sync (no footage bundled)
+- `player_names.parquet` from lineups (names beyond the Bundesliga slice)
+
 ## Notes
 
 - Processed data and reports are local-only (see `.gitignore`); clone the repo and run the pipeline to generate them.

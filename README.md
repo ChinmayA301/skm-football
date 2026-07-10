@@ -4,7 +4,8 @@ Open-source pipeline for **process-based player valuation** in football.
 
 **SKM v1** scores every on-ball action with VAEP **ΔP** plus difficulty (**D**), context (**C**), and role (**R**). The long-term goal is a **moment-based** metric that credits players for involvement in match-winning phases—not only the ball carrier. See the [roadmap](docs/ROADMAP.md).
 
-**v0.1.0** · Bundesliga 2023/24 (StatsBomb open, 34 matches) · sklearn VAEP
+**v0.2.0-dev** · StatsBomb open data, 216 matches across 5 competitions
+(Bundesliga 23/24 · World Cup 2022 · Euro 2024 · Ligue 1 22/23 · La Liga 20/21) · sklearn VAEP
 
 ```
 SKM_i      = ΔP_i × (1 + 0.3·D_i + 0.3·C_i + 0.3·R_i)
@@ -95,7 +96,7 @@ SKM v1 (**SKM-Chance**) is an **action-level** proxy, not the final moment-based
 | ρ(skm, ΔP) ≈ 0.996 | SKM tracks VAEP net value closely today |
 | ρ(skm, progressive_per90) ≈ −0.11 | Progressive midfield work is under-rewarded |
 | ρ(skm, xG) ≈ 0.25; assists ≈ 0.47 | Not a pure goals/assists stat, but offense-skewed |
-| 34-match sample | Not a full season; compare external ratings with care |
+| 216-match multi-competition sample | Mixes club + tournament contexts; FotMob benchmarks cover the Bundesliga slice only |
 
 Example: **Tella / Boniface** rank high on SKM per90 with modest FotMob season ratings; **Xhaka** has a top FotMob rating but lower v1 SKM—motivation for moment-based v2. Details in [case studies](docs/CASE_STUDIES.md) and [market positioning](docs/SKM_MARKET_POSITIONING.md).
 

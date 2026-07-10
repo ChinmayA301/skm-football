@@ -106,20 +106,22 @@ ingested.
 structural boost only — re-adding defensive VAEP would double count. Bonuses
 are priced in units of the sample's median positive ΔP (self-calibrating).
 
-**Phase 6 target status on the 34-match open sample (n=18 players ≥400 actions):**
+**Phase 6 target status — expanded sample (216 matches / 5 competitions,
+n=233 players ≥400 actions):**
 
 | Target | v1 | v2 (α=0.7) | Met? |
 |--------|----|-----------|------|
-| ρ(skm, ΔP) < 0.99 | 0.996 | **0.940** | ✅ |
-| ρ(skm, progressive_per90) > 0 | 0.079 | −0.102 | ❌ |
+| ρ(skm, ΔP) < 0.99 | 0.996 | **0.964** | ✅ |
+| ρ(skm, progressive_per90) > 0 | −0.125 | −0.194 | ❌ |
 
-**Sensitivity findings (disclosed, not tuned away):** lowering α (more moment
-sharing) moves ρ(ΔP) down but makes the progressive correlation *worse* —
-touch-share redistribution channels value toward attackers in shot-ending
-moments. Raising the progressive bonus 8× only halves the deficit (−0.045).
-With ~18–30 qualifying players, forcing the sign positive would be
-tuning-to-target on a sample that cannot support it. Deferred to Phase 6
-with a larger sample and per-position normalization.
+**Findings (disclosed, not tuned away):** on the expanded sample the negative
+progressive correlation is a *structural* property, not small-n noise — both
+v1 and v2 concentrate value in shot-adjacent actions, and moment sharing
+amplifies it (touch-share redistribution favors attackers in shot-ending
+moments). Sensitivity: lowering α worsens it; an 8× progressive bonus only
+halves it. Phase 6 therefore needs a modeling change (per-position
+normalization and/or moment-type value weighting), not parameter tuning —
+the 233-player sample now makes that work defensible.
 
 ---
 

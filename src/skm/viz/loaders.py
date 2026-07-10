@@ -10,7 +10,10 @@ import pandas as pd
 from skm.config import (
     ACTIONS_SCORED_PARQUET,
     EVENTS_PARQUET,
+    MOMENT_PLAYERS_PARQUET,
+    MOMENTS_PARQUET,
     PLAYER_LEADERBOARD_PARQUET,
+    PLAYER_SKM_V2_PARQUET,
 )
 
 
@@ -34,6 +37,21 @@ def load_events() -> pd.DataFrame:
     return pd.read_parquet(EVENTS_PARQUET)
 
 
+def load_moments() -> pd.DataFrame:
+    require_file(MOMENTS_PARQUET, "Run: skm-build-moments")
+    return pd.read_parquet(MOMENTS_PARQUET)
+
+
+def load_moment_players() -> pd.DataFrame:
+    require_file(MOMENT_PLAYERS_PARQUET, "Run: skm-build-moments")
+    return pd.read_parquet(MOMENT_PLAYERS_PARQUET)
+
+
+def load_v2_board() -> pd.DataFrame:
+    require_file(PLAYER_SKM_V2_PARQUET, "Run: skm-build-credits")
+    return pd.read_parquet(PLAYER_SKM_V2_PARQUET)
+
+
 def load_leaderboard() -> pd.DataFrame:
     if PLAYER_LEADERBOARD_PARQUET.exists():
         return pd.read_parquet(PLAYER_LEADERBOARD_PARQUET)
@@ -44,6 +62,12 @@ def load_leaderboard() -> pd.DataFrame:
 
 
 def player_name_map(events: Optional[pd.DataFrame] = None) -> pd.Series:
+    """player_id → name. Prefers the lineup-based names parquet (covers all
+    competitions); falls back to events.parquet (original sample only)."""
+    names_path = ACTIONS_SCORED_PARQUET.parent / "player_names.parquet"
+    if names_path.exists():
+        names = pd.read_parquet(names_path)
+        return names.set_index("player_id")["player_name"]
     if events is None:
         events = load_events()
     return events.dropna(subset=["player_id"]).groupby("player_id")["player"].first()
