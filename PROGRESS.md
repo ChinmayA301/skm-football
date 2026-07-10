@@ -70,6 +70,13 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for detail.
   overlays + optional local-video sync (no footage bundled)
 - `player_names.parquet` from lineups (names beyond the Bundesliga slice)
 
+### Video intelligence (Layer 3, Stage 1)
+- `skm-build-360`: StatsBomb 360 defender geometry → `D_360`, `skm_360`
+- Coverage 216/216 games; held-out AUC for completion model
+  0.690 (event-only) → **0.829** (with geometry)
+- Expert-preference calibration scaffold (`preference.py`, Bradley-Terry)
+  and staged CV/RL plan in `docs/VIDEO_INTELLIGENCE.md`
+
 ## Notes
 
 - Processed data and reports are local-only (see `.gitignore`); clone the repo and run the pipeline to generate them.

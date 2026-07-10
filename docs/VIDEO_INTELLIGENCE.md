@@ -15,18 +15,28 @@ Stage 3 (SCAFFOLD)  Expert pairwise preferences → reward model → calibration
 ## Stage 1 — 360 freeze frames (shipped: `skm-build-360`)
 
 StatsBomb 360 *is* video intelligence: player positions extracted from
-broadcast frames at each event, quality-controlled and licensed. Open data
-covers **World Cup 2022 + Euro 2024 — 115 of our 216 matches**.
+broadcast frames at each event, quality-controlled and licensed. Open-data
+360 releases turned out to cover **all 216 matches in our sample** (WC 2022,
+Euro 2024, Bundesliga 23/24, Ligue 1 22/23, and the La Liga 20/21 release).
 
 Per event we compute: `nearest_def_m`, `n_def_5m`, `n_def_10m`,
 `n_def_ahead`, `n_visible` (see `src/skm/models/freeze_frame.py`), then
 refit the completion-difficulty model with real defender geometry → `D_360`
 and `skm_360`.
 
-**Prototype result (8 matches):** 86.9% event coverage;
-coef(nearest_def_m) = +1.0 (space → success, correct sign);
-corr(D, D_360) = 0.58 — geometry carries information the binary
-`under_pressure` flag does not; 34% of covered actions shift by >0.5 in D.
+**Full-run results (216 matches, 372,657 covered on-ball actions):**
+
+| Check | Value |
+|---|---|
+| Event coverage | 216/216 games |
+| coef(nearest_def_m) | +0.99 (space → success, correct sign) |
+| corr(D, D_360) | 0.58 — geometry ≠ the binary `under_pressure` flag |
+| Covered actions with \|D_360 − D\| > 0.5 | 32.6% |
+| **Held-out AUC (completion model), event-only** | **0.690** |
+| **Held-out AUC with 360 geometry** | **0.829** (+0.14, 42 held-out games) |
+
+The held-out AUC gap is the gate result: real defender geometry makes the
+difficulty component substantially more accurate, not just different.
 
 **Limits (disclosed):** frames only show the camera's visible area
 (`n_visible` tracks this); no player identities in frames; no continuous
@@ -91,7 +101,7 @@ tagged, inter-rater agreement reported before any training run).
 
 | Step | Gate to proceed |
 |---|---|
-| 1. `skm-build-360` full run | D_360 improves completion-model fit on held-out matches |
+| 1. `skm-build-360` full run | ✅ **passed** — held-out AUC 0.690 → 0.829 |
 | 2. Feed D_360 into skm/moments for the 360 slice | rank changes reviewed, documented |
 | 3. Collect ~200 expert pairs | inter-rater agreement > chance |
 | 4. Preference-calibrate moment values | held-out pair accuracy > 0.65 |
