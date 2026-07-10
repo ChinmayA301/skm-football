@@ -18,6 +18,8 @@ SKM sits in a line of **process-based** football metrics that value every on-bal
 | Framework | Focus | vs SKM |
 |-----------|--------|--------|
 | **OBV** (StatsBomb) | On-ball value, proprietary | Black-box; SKM is open and decomposed |
+| **DxT** (2025) | xT + off-ball positioning | Aligned with SKM Layer 3 (tracking); this repo is event-only |
+| **xSuccess** (Paul, Klemp & Memmert, 2026) | Completion-probability correction to VAEP | Overlaps SKM's D; SKM applies difficulty in-formula, not post-hoc |
 | **xG chain / xG buildup** | Shot-centric chains | SKM is not shot-only |
 | **Packing / progressive passes** | Space gained | SKM includes difficulty, context, role weights |
 | **Ratings (FotMob, WhoScored)** | Subjective + outcomes | SKM is process-based; compare in Tier 3 validation |
@@ -34,15 +36,21 @@ SKM_i = ΔP_i × (1 + w_d·D_i + w_c·C_i + w_r·R_i)
 
 ## References
 
-1. Decroos, T., Bransen, L., Van Haaren, J., & Davis, J. (2019). Actions speak louder than goals: Valuing player actions in soccer. *KDD*.
-2. Singh, A. (2019). Introducing Expected Threat (xT). [socceraction xT docs](https://socceraction.readthedocs.io/)
-3. StatsBomb Open Data — [user agreement](https://github.com/statsbomb/open-data)
+1. Decroos, T., Bransen, L., Van Haaren, J., & Davis, J. (2019). Actions speak louder than goals: Valuing player actions in soccer. *KDD '19*.
+2. Singh, K. (2019). Introducing Expected Threat (xT). *karun.in/blog* ([socceraction xT docs](https://socceraction.readthedocs.io/))
+3. Van Roy, M., Robberechts, P., Decroos, T., & Davis, J. (2020). Valuing on-the-ball actions in soccer: A critical comparison of xT and VAEP. *AAAI Workshop on AI in Team Sports*.
+4. Fernández, J., Bornn, L., & Cervone, D. (2019). Decomposing the immeasurable sport: A deep learning expected possession value framework for soccer. *MIT Sloan Sports Analytics Conference*.
+5. Paul, Y., Klemp, M., & Memmert, D. (2026). Beyond outcome bias: Incorporating action completion probability and risk-return into soccer evaluation models. *MLSA 2025*.
+6. Pleuler, D. (2021). *Soccer Analytics Handbook*. GitHub.
+7. StatsBomb Open Data — [user agreement](https://github.com/statsbomb/open-data)
 
 ## Limitations (state in any publication)
 
-- StatsBomb open sample: 34 Bundesliga 2023/24 matches (not full season).
+- StatsBomb open sample: 216 matches across 5 competitions (mixed club and
+  tournament contexts, not full seasons).
 - Minutes estimated from action counts.
 - VAEP model differs from paper (sklearn vs boosted trees).
+- Penalty shootouts (period 5) excluded — VAEP labels are undefined there.
 - Public ratings are not ground truth.
 
 ## Future work

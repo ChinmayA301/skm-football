@@ -82,6 +82,14 @@ def run_phase2(
 
     actions = pd.concat(action_parts, ignore_index=True)
     games = pd.concat(game_parts)
+
+    # Exclude penalty shootouts (period 5): VAEP's "next k actions" labels are
+    # meaningless there and assign large negative ΔP even to scored kicks.
+    n_shootout = int((actions["period_id"] == 5).sum())
+    if n_shootout:
+        logger.info("Dropping %s penalty-shootout actions (period 5)", n_shootout)
+        actions = actions[actions["period_id"] <= 4].reset_index(drop=True)
+
     logger.info("SPADL actions: %s rows across %s games", len(actions), actions["game_id"].nunique())
 
     actions = _attach_event_pressure(actions)
