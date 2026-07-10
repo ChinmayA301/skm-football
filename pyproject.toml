@@ -38,6 +38,7 @@ app = [
 skm-build-events = "skm.data.pipeline:main"
 skm-build-scores = "skm.models.pipeline:main"
 skm-build-moments = "skm.models.moments:main"
+skm-build-credits = "skm.models.credits:main"
 skm-export-reports = "skm.viz.reports:main"
 skm-validate = "skm.viz.validation_cli:main"
 

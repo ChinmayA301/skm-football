@@ -91,14 +91,35 @@ ingested.
 
 ---
 
-## Phase 5b — Chance + control layers
+## Phase 5b (released) — Chance + control layers, moment credits
 
-| Layer | Role |
-|-------|------|
-| `skm_chance` | Current v1 formula (ΔP × DCR) |
-| `skm_control` | Defensive VAEP + progressive/pressure/zone boost |
+| Layer | Role | Status |
+|-------|------|--------|
+| `skm_chance` | Current v1 formula (ΔP × DCR) | Done (alias of `skm`) |
+| `skm_control` | Structural boost: progressive / press-resistance / own-third defense | Done |
+| `moment_value` | Σ (skm + skm_control) per moment | Done |
+| Player credits | `α·own_value + (1−α)·share·moment_value`, α=0.7 | Done |
+| `skm-build-credits` CLI → `player_credits.parquet`, `player_skm_v2.parquet` | Provisional v2 leaderboard | Done |
 
-Actions roll up into `moment_value` during migration.
+**Correction to the original plan:** defensive VAEP already flows through ΔP
+(`delta_p = offensive_value + defensive_value`), so `skm_control` is the
+structural boost only — re-adding defensive VAEP would double count. Bonuses
+are priced in units of the sample's median positive ΔP (self-calibrating).
+
+**Phase 6 target status on the 34-match open sample (n=18 players ≥400 actions):**
+
+| Target | v1 | v2 (α=0.7) | Met? |
+|--------|----|-----------|------|
+| ρ(skm, ΔP) < 0.99 | 0.996 | **0.940** | ✅ |
+| ρ(skm, progressive_per90) > 0 | 0.079 | −0.102 | ❌ |
+
+**Sensitivity findings (disclosed, not tuned away):** lowering α (more moment
+sharing) moves ρ(ΔP) down but makes the progressive correlation *worse* —
+touch-share redistribution channels value toward attackers in shot-ending
+moments. Raising the progressive bonus 8× only halves the deficit (−0.045).
+With ~18–30 qualifying players, forcing the sign positive would be
+tuning-to-target on a sample that cannot support it. Deferred to Phase 6
+with a larger sample and per-position normalization.
 
 ---
 

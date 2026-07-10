@@ -31,6 +31,14 @@
 - Per-player involvement shares (on-ball touch share)
 - 34-match sample: 12,172 moments; 7.3% contain a shot; median 3 actions
 
+### Models (Phase 5b) — Chance + control layers, moment credits
+- `skm_control`: progressive / press-resistance / own-third-defense bonuses,
+  priced in median-positive-ΔP units (defensive VAEP already inside ΔP)
+- `moment_value` roll-up; player credit = `α·own + (1−α)·share·moment_value`
+- `skm-build-credits` → `player_credits.parquet`, `player_skm_v2.parquet`
+- Phase 6 targets: ρ(v2, ΔP)=0.940 ✅ (<0.99); ρ(v2, progressive)=−0.10 ❌ —
+  sensitivity analysis in ROADMAP; tuning deferred to a larger sample
+
 ### Validation & UI
 - `skm-validate` (Tiers 1–3), `skm-export-reports`
 - Streamlit dashboard with validation tab
@@ -45,7 +53,6 @@
 
 | Phase | Focus |
 |-------|--------|
-| 5b | `skm_chance` + `skm_control` layers, moment-level valuation |
 | 6 | Single public `skm_per90` from moment credits |
 | 7 | Match-relative context (competition, pressure, lineups) |
 | 8 | Counterfactual / tracking / optional AI layer |

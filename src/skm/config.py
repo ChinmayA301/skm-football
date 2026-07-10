@@ -45,6 +45,14 @@ MOMENT_MAX_ACTIONS = 25  # length cap per moment
 TRANSITION_PROGRESS_M = 25.0  # net forward progress to call a regain a transition
 TRANSITION_WINDOW_ACTIONS = 4  # actions inspected for transition progress
 
+# skm_control + moment credits (Phase 5b)
+# Bonus unit = median positive delta_p on the sample (self-calibrating);
+# multipliers below scale that unit.
+CONTROL_PROG_MULT = 1.0  # successful progressive pass/carry/cross
+CONTROL_PRESS_MULT = 0.5  # successful on-ball action under pressure
+CONTROL_ZONE_MULT = 0.5  # successful defensive action in own third
+MOMENT_CREDIT_ALPHA = 0.7  # own-action value share vs moment-shared value
+
 # VAEP training
 VAEP_NR_ACTIONS = 10
 VAEP_NB_PREV_ACTIONS = 3
@@ -60,3 +68,5 @@ ACTIONS_SCORED_PARQUET = DATA_PROCESSED / "actions_scored.parquet"
 PLAYER_LEADERBOARD_PARQUET = DATA_PROCESSED / "player_leaderboard.parquet"
 MOMENTS_PARQUET = DATA_PROCESSED / "moments.parquet"
 MOMENT_PLAYERS_PARQUET = DATA_PROCESSED / "moment_players.parquet"
+PLAYER_CREDITS_PARQUET = DATA_PROCESSED / "player_credits.parquet"
+PLAYER_SKM_V2_PARQUET = DATA_PROCESSED / "player_skm_v2.parquet"
