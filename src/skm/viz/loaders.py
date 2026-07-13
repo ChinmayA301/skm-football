@@ -14,7 +14,12 @@ from skm.config import (
     MOMENTS_PARQUET,
     PLAYER_LEADERBOARD_PARQUET,
     PLAYER_SKM_V2_PARQUET,
+    PROJECT_ROOT,
 )
+
+# Slim committed bundle (scripts/make_app_bundle.py) — used on Streamlit
+# Cloud where data/processed/ is not built.
+APP_DATA = PROJECT_ROOT / "data" / "app"
 
 
 class DataNotFoundError(FileNotFoundError):
@@ -22,39 +27,38 @@ class DataNotFoundError(FileNotFoundError):
 
 
 def require_file(path: Path, hint: str) -> Path:
-    if not path.exists():
-        raise DataNotFoundError(f"Missing {path.name}. {hint}")
-    return path
+    if path.exists():
+        return path
+    bundled = APP_DATA / path.name
+    if bundled.exists():
+        return bundled
+    raise DataNotFoundError(f"Missing {path.name}. {hint}")
 
 
 def load_actions() -> pd.DataFrame:
-    require_file(ACTIONS_SCORED_PARQUET, "Run: skm-build-scores")
-    return pd.read_parquet(ACTIONS_SCORED_PARQUET)
+    return pd.read_parquet(require_file(ACTIONS_SCORED_PARQUET, "Run: skm-build-scores"))
 
 
 def load_events() -> pd.DataFrame:
-    require_file(EVENTS_PARQUET, "Run: skm-build-events")
-    return pd.read_parquet(EVENTS_PARQUET)
+    return pd.read_parquet(require_file(EVENTS_PARQUET, "Run: skm-build-events"))
 
 
 def load_moments() -> pd.DataFrame:
-    require_file(MOMENTS_PARQUET, "Run: skm-build-moments")
-    return pd.read_parquet(MOMENTS_PARQUET)
+    return pd.read_parquet(require_file(MOMENTS_PARQUET, "Run: skm-build-moments"))
 
 
 def load_moment_players() -> pd.DataFrame:
-    require_file(MOMENT_PLAYERS_PARQUET, "Run: skm-build-moments")
-    return pd.read_parquet(MOMENT_PLAYERS_PARQUET)
+    return pd.read_parquet(require_file(MOMENT_PLAYERS_PARQUET, "Run: skm-build-moments"))
 
 
 def load_v2_board() -> pd.DataFrame:
-    require_file(PLAYER_SKM_V2_PARQUET, "Run: skm-build-credits")
-    return pd.read_parquet(PLAYER_SKM_V2_PARQUET)
+    return pd.read_parquet(require_file(PLAYER_SKM_V2_PARQUET, "Run: skm-build-credits"))
 
 
 def load_leaderboard() -> pd.DataFrame:
-    if PLAYER_LEADERBOARD_PARQUET.exists():
-        return pd.read_parquet(PLAYER_LEADERBOARD_PARQUET)
+    for path in (PLAYER_LEADERBOARD_PARQUET, APP_DATA / PLAYER_LEADERBOARD_PARQUET.name):
+        if path.exists():
+            return pd.read_parquet(path)
     actions = load_actions()
     from skm.models.skm_combine import player_leaderboard
 
@@ -64,10 +68,13 @@ def load_leaderboard() -> pd.DataFrame:
 def player_name_map(events: Optional[pd.DataFrame] = None) -> pd.Series:
     """player_id → name. Prefers the lineup-based names parquet (covers all
     competitions); falls back to events.parquet (original sample only)."""
-    names_path = ACTIONS_SCORED_PARQUET.parent / "player_names.parquet"
-    if names_path.exists():
-        names = pd.read_parquet(names_path)
-        return names.set_index("player_id")["player_name"]
+    for names_path in (
+        ACTIONS_SCORED_PARQUET.parent / "player_names.parquet",
+        APP_DATA / "player_names.parquet",
+    ):
+        if names_path.exists():
+            names = pd.read_parquet(names_path)
+            return names.set_index("player_id")["player_name"]
     if events is None:
         events = load_events()
     return events.dropna(subset=["player_id"]).groupby("player_id")["player"].first()

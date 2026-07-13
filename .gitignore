@@ -15,6 +15,9 @@ data/raw/*
 data/processed/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
+# Slim committed bundle for Streamlit Cloud (scripts/make_app_bundle.py)
+!data/app/
+!data/app/*.parquet
 data/reports/
 !data/external/
 !data/external/*.csv

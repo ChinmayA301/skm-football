@@ -82,6 +82,15 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for detail.
   down: Carrasco, Doku, Ziyech)
 - Dashboard "Label moments" tab collects expert preference pairs into
   `data/external/expert_moment_labels.csv` (ships header-only)
+- **D_360 promoted** to the default difficulty (pipeline attaches 360 by
+  default; `--skip-360` opts out; event-only D kept as `D_event`)
+
+### Phase 6 — position-normalized SKM (v3)
+- `skm-build-phase6` → `player_skm_v3.parquet`: z-score of v2 per-90
+  within primary position group
+- **Both Phase 6 targets pass**: ρ(v3, ΔP)=0.868 (<0.99 ✅);
+  ρ(v3, progressive)=+0.061 (>0 ✅, flipped from −0.208)
+- v3 is dimensionless (peer-relative); cross-position magnitudes → v2
 
 ## Notes
 

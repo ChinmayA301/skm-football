@@ -351,6 +351,15 @@ with tab7:
 
         labels = pd.read_csv(LABELS_CSV)
         st.metric("Pairs labeled", len(labels))
+        if len(labels):
+            st.download_button(
+                "Download labels CSV",
+                LABELS_CSV.read_text(),
+                file_name="expert_moment_labels.csv",
+                mime="text/csv",
+                help="On Streamlit Cloud the container disk is ephemeral — "
+                "download labels you want to keep.",
+            )
         if len(labels) >= 10:
             st.caption("Enough pairs to fit a first preference model: "
                        "`skm.models.preference.fit_preference_model`")
