@@ -76,6 +76,12 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for detail.
   0.690 (event-only) → **0.829** (with geometry)
 - Expert-preference calibration scaffold (`preference.py`, Bradley-Terry)
   and staged CV/RL plan in `docs/VIDEO_INTELLIGENCE.md`
+- Gate 2 passed (`scripts/propagate_d360.py`): D_360 through the full
+  stack — ρ=0.995 overall but systematic movement (congestion mids up:
+  Schick +55, Gündoğan, Mac Allister, Rodri; space-receiving wide players
+  down: Carrasco, Doku, Ziyech)
+- Dashboard "Label moments" tab collects expert preference pairs into
+  `data/external/expert_moment_labels.csv` (ships header-only)
 
 ## Notes
 
