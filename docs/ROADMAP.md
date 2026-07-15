@@ -44,28 +44,84 @@ SKM_i = ΔP_i × (1 + 0.3·D_i + 0.3·C_i + 0.3·R_i)
 
 ---
 
-## Phase 5 — Moment segmentation
+## v1.5 (released) — Adjusted SKM weighting layer
 
-**Goal:** Unit of account = `moment_id`, not a single action.
+```text
+adjusted_skm = skm × position_weight × role_weight × game_state_weight × sequence_weight
+```
 
-| Deliverable | Description |
-|-------------|-------------|
-| `src/skm/models/moments.py` | Possession phases, transitions, length caps |
-| `moments.parquet` | Boundaries + context at moment start |
-| `moment_players.parquet` | Involvement shares per player |
+| Component | Status |
+|-----------|--------|
+| Position priors (StatsBomb lineups → position groups × SPADL types) | Done |
+| Role weight from role-cluster action rates | Done |
+| Game-state leverage weight (garbage time / late close) | Done |
+| Sequence weight (chains ending in shots share credit) | Done |
+| `adjusted_skm_per90` in leaderboard + dashboard | Done |
 
-**Success criterion:** Same player, different matches → different moment portfolios.
+**Known limits:** position weights are hand-set priors; sequence chains are a
+heuristic (same team, ≤15 s gaps), not tracked possessions; partial overlap
+between game-state weight and C. All weights are clipped to modest ranges so
+adjusted SKM stays close to base SKM until the priors are validated.
 
 ---
 
-## Phase 5b — Chance + control layers
+## Phase 5 (released) — Moment segmentation
 
-| Layer | Role |
-|-------|------|
-| `skm_chance` | Current v1 formula (ΔP × DCR) |
-| `skm_control` | Defensive VAEP + progressive/pressure/zone boost |
+**Goal:** Unit of account = `moment_id`, not a single action.
 
-Actions roll up into `moment_value` during migration.
+| Deliverable | Status |
+|-------------|--------|
+| `src/skm/models/moments.py` — possession phases, transitions, set pieces, length caps | Done |
+| `moments.parquet` — boundaries + start context (score, minute, reason, type) | Done |
+| `moment_players.parquet` — per-player involvement shares | Done |
+| `skm-build-moments` CLI | Done |
+
+On the open 34-match sample: 12,172 moments (66.6% open play, 21.6% set
+piece, 11.8% transition), 7.3% containing a shot, median 3 actions per moment.
+
+**Success criterion** (same player, different matches → different moment
+portfolios): 53% of players show varying per-match moment counts on the
+34-match sample.
+
+**Known limits:** boundaries are heuristics (team change, ≤20 s gaps, dead
+balls, 25-action cap), not StatsBomb possession chains; attack direction is
+inferred from shot end locations; involvement is on-ball touch share only —
+pressers and off-ball runners enter in Phase 7 when pressure events are
+ingested.
+
+---
+
+## Phase 5b (released) — Chance + control layers, moment credits
+
+| Layer | Role | Status |
+|-------|------|--------|
+| `skm_chance` | Current v1 formula (ΔP × DCR) | Done (alias of `skm`) |
+| `skm_control` | Structural boost: progressive / press-resistance / own-third defense | Done |
+| `moment_value` | Σ (skm + skm_control) per moment | Done |
+| Player credits | `α·own_value + (1−α)·share·moment_value`, α=0.7 | Done |
+| `skm-build-credits` CLI → `player_credits.parquet`, `player_skm_v2.parquet` | Provisional v2 leaderboard | Done |
+
+**Correction to the original plan:** defensive VAEP already flows through ΔP
+(`delta_p = offensive_value + defensive_value`), so `skm_control` is the
+structural boost only — re-adding defensive VAEP would double count. Bonuses
+are priced in units of the sample's median positive ΔP (self-calibrating).
+
+**Phase 6 target status — expanded sample (216 matches / 5 competitions,
+n=233 players ≥400 actions):**
+
+| Target | v1 | v2 (α=0.7) | Met? |
+|--------|----|-----------|------|
+| ρ(skm, ΔP) < 0.99 | 0.996 | **0.964** | ✅ |
+| ρ(skm, progressive_per90) > 0 | −0.125 | −0.194 | ❌ |
+
+**Findings (disclosed, not tuned away):** on the expanded sample the negative
+progressive correlation is a *structural* property, not small-n noise — both
+v1 and v2 concentrate value in shot-adjacent actions, and moment sharing
+amplifies it (touch-share redistribution favors attackers in shot-ending
+moments). Sensitivity: lowering α worsens it; an 8× progressive bonus only
+halves it. Phase 6 therefore needs a modeling change (per-position
+normalization and/or moment-type value weighting), not parameter tuning —
+the 233-player sample now makes that work defensible.
 
 ---
 

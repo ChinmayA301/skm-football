@@ -20,7 +20,14 @@ from skm.config import (
 from skm.models.context import compute_context
 from skm.models.difficulty import compute_difficulty, fit_difficulty_model
 from skm.models.role import compute_role, fit_role_clusters
-from skm.models.skm_combine import combine_skm, player_leaderboard
+from skm.models.skm_combine import combine_adjusted_skm, combine_skm, player_leaderboard
+from skm.models.weights import (
+    attach_player_positions,
+    compute_game_state_weight,
+    compute_position_weight,
+    compute_role_weight,
+    compute_sequence_weight,
+)
 from skm.models.booster_compat import stub_broken_boosters
 from skm.models.spadl_convert import build_spadl_actions, resolve_competition_ids
 from skm.models.vaep_delta import rate_all_actions, train_vaep
@@ -56,11 +63,33 @@ def run_phase2(
     season: str = DEFAULT_SEASON,
     max_games: Optional[int] = None,
     skip_xt: bool = False,
+    competitions: Optional[list] = None,
 ) -> pd.DataFrame:
-    cid, sid = resolve_competition_ids(competition, season)
-    logger.info("Phase 2: %s %s (competition_id=%s)", competition, season, cid)
+    """competitions: optional list of (competition_name, season_name) pairs;
+    overrides the single competition/season arguments when given."""
+    pairs = competitions or [(competition, season)]
 
-    actions, games = build_spadl_actions(cid, sid, max_games=max_games)
+    action_parts, game_parts = [], []
+    for comp_name, season_name in pairs:
+        cid, sid = resolve_competition_ids(comp_name, season_name)
+        logger.info("Phase 2: %s %s (competition_id=%s)", comp_name, season_name, cid)
+        part_actions, part_games = build_spadl_actions(cid, sid, max_games=max_games)
+        part_games = part_games.copy()
+        part_games["competition"] = comp_name
+        part_games["season"] = season_name
+        action_parts.append(part_actions)
+        game_parts.append(part_games)
+
+    actions = pd.concat(action_parts, ignore_index=True)
+    games = pd.concat(game_parts)
+
+    # Exclude penalty shootouts (period 5): VAEP's "next k actions" labels are
+    # meaningless there and assign large negative ΔP even to scored kicks.
+    n_shootout = int((actions["period_id"] == 5).sum())
+    if n_shootout:
+        logger.info("Dropping %s penalty-shootout actions (period 5)", n_shootout)
+        actions = actions[actions["period_id"] <= 4].reset_index(drop=True)
+
     logger.info("SPADL actions: %s rows across %s games", len(actions), actions["game_id"].nunique())
 
     actions = _attach_event_pressure(actions)
@@ -87,6 +116,18 @@ def run_phase2(
 
     actions["skm"] = combine_skm(actions).values
 
+    # v1.5 weighting layer → adjusted_skm
+    try:
+        actions = attach_player_positions(actions)
+    except Exception as exc:
+        logger.warning("Position fetch failed (%s); position_weight=1.0", exc)
+        actions["position_group"] = None
+    actions["position_weight"] = compute_position_weight(actions).values
+    actions["role_weight"] = compute_role_weight(actions, role_state).values
+    actions["game_state_weight"] = compute_game_state_weight(actions, games).values
+    actions["sequence_weight"] = compute_sequence_weight(actions).values
+    actions["adjusted_skm"] = combine_adjusted_skm(actions).values
+
     return actions, games
 
 
@@ -94,23 +135,40 @@ def main(argv: Optional[list] = None) -> int:
     parser = argparse.ArgumentParser(description="Build SKM scores (Phase 2)")
     parser.add_argument("--competition", default=DEFAULT_COMPETITION)
     parser.add_argument("--season", default=DEFAULT_SEASON)
+    parser.add_argument(
+        "--competitions",
+        default=None,
+        help='Multiple competitions as "Name:Season,Name:Season" (overrides --competition/--season)',
+    )
     parser.add_argument("--max-games", type=int, default=None)
     parser.add_argument("--actions-output", default=str(ACTIONS_SCORED_PARQUET))
     parser.add_argument("--leaderboard-output", default=str(PLAYER_LEADERBOARD_PARQUET))
     parser.add_argument("--skip-xt", action="store_true")
     args = parser.parse_args(argv)
 
+    competitions = None
+    if args.competitions:
+        competitions = [
+            tuple(pair.split(":", 1)) for pair in args.competitions.split(",") if ":" in pair
+        ]
+
     actions, games = run_phase2(
         competition=args.competition,
         season=args.season,
         max_games=args.max_games,
         skip_xt=args.skip_xt,
+        competitions=competitions,
     )
 
     actions_path = Path(args.actions_output)
     actions_path.parent.mkdir(parents=True, exist_ok=True)
     actions.to_parquet(actions_path, index=False)
     logger.info("Wrote actions → %s", actions_path)
+
+    from skm.config import GAMES_PARQUET
+
+    games.reset_index().to_parquet(GAMES_PARQUET, index=False)
+    logger.info("Wrote games metadata → %s", GAMES_PARQUET)
 
     board = player_leaderboard(actions, games)
     board_path = Path(args.leaderboard_output)

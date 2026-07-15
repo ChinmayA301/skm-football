@@ -10,7 +10,7 @@ st.title("SKM — Skill-Key Moments")
 st.caption("Chain-reaction action valuation on StatsBomb open data")
 
 try:
-    from skm.viz.loaders import DataNotFoundError, load_all
+    from skm.viz.loaders import DataNotFoundError, load_all, player_name_map
     from skm.viz.hidden_heroes import hidden_heroes_table, role_fairness_by_type
     from skm.viz.timeline import list_match_ids, match_timeline_data
     from skm.viz.player_profile import player_component_summary, list_players
@@ -34,19 +34,46 @@ except DataNotFoundError as exc:
     )
     st.stop()
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs(
-    ["Leaderboard", "Match timeline", "Player profile", "Hidden influence", "Validation"]
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+    [
+        "Leaderboard",
+        "Match timeline",
+        "Player profile",
+        "Hidden influence",
+        "Validation",
+        "Moments",
+    ]
 )
+
+# Fixed categorical colors per moment type (validated palette; identity never cycles)
+MOMENT_COLORS = {"open_play": "#2a78d6", "transition": "#1baf7a", "set_piece": "#eda100"}
 
 with tab1:
     st.subheader("Player leaderboard")
     min_actions = st.slider("Minimum actions", 100, 800, 400, 50)
     show = board[board["n_actions"] >= min_actions] if "n_actions" in board.columns else board
-    metric = st.selectbox("Sort by", ["skm_per90", "delta_p_per90", "xt_per90"])
+    metric_options = [
+        m
+        for m in ["skm_per90", "adjusted_skm_per90", "delta_p_per90", "xt_per90"]
+        if m in show.columns
+    ]
+    metric = st.selectbox("Sort by", metric_options)
     show = show.sort_values(metric, ascending=False)
     st.dataframe(
         show[
-            [c for c in ["player", "player_id", "skm_per90", "delta_p_per90", "xt_per90", "n_actions"] if c in show.columns]
+            [
+                c
+                for c in [
+                    "player",
+                    "player_id",
+                    "skm_per90",
+                    "adjusted_skm_per90",
+                    "delta_p_per90",
+                    "xt_per90",
+                    "n_actions",
+                ]
+                if c in show.columns
+            ]
         ].head(50),
         use_container_width=True,
     )
@@ -141,3 +168,96 @@ with tab5:
     st.caption(
         "Run `skm-validate` for CSV exports. Fill `data/external/bundesliga_2324_benchmarks.csv` for Tier 3."
     )
+
+with tab6:
+    st.subheader("Moments (Phase 5/5b)")
+    try:
+        from skm.viz.loaders import load_moments, load_v2_board
+
+        moments = load_moments()
+    except DataNotFoundError as exc:
+        st.warning(str(exc))
+        st.stop()
+
+    import plotly.express as px
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Moments", f"{len(moments):,}")
+    c2.metric("Contain a shot", f"{moments['contains_shot'].mean():.1%}")
+    c3.metric("Transitions", f"{(moments['moment_type'] == 'transition').mean():.1%}")
+    c4.metric("Median actions", f"{moments['n_actions'].median():.0f}")
+
+    st.markdown("**Moment map** — one dot per moment; height = summed SKM value")
+    mid6 = st.selectbox(
+        "Match", sorted(moments["game_id"].unique()), format_func=lambda x: f"Game {x}", key="m6"
+    )
+    mm = moments[moments["game_id"] == mid6].copy()
+    mm["team"] = mm["team_id"].astype(str)
+    fig = px.scatter(
+        mm,
+        x="start_minute",
+        y="skm_sum",
+        color="moment_type",
+        color_discrete_map=MOMENT_COLORS,
+        symbol="contains_shot",
+        symbol_map={False: "circle", True: "diamond"},
+        hover_data=["moment_id", "team", "n_actions", "score_diff_start", "start_reason"],
+        labels={"start_minute": "Minute", "skm_sum": "Moment SKM value"},
+    )
+    fig.update_traces(marker={"size": 9, "line": {"width": 1, "color": "#fcfcfb"}})
+    fig.update_layout(legend_title_text="")
+    st.plotly_chart(fig, use_container_width=True)
+    st.caption("Diamonds = moments containing a shot.")
+
+    st.markdown("**Top moments in this match**")
+    top_cols = [
+        "moment_id",
+        "start_minute",
+        "moment_type",
+        "team",
+        "n_actions",
+        "skm_sum",
+        "score_diff_start",
+        "contains_shot",
+        "contains_goal",
+    ]
+    st.dataframe(
+        mm.sort_values("skm_sum", ascending=False)[top_cols].head(12),
+        use_container_width=True,
+    )
+
+    st.markdown("**v1 vs v2 (moment credits)** — players off the diagonal move under moment sharing")
+    try:
+        board_v2 = load_v2_board()
+        names = player_name_map(events)
+        board_v2["player"] = board_v2["player_id"].map(names)
+        fig2 = px.scatter(
+            board_v2,
+            x="skm_v1_per90",
+            y="skm_v2_per90",
+            hover_data=["player", "progressive_per90", "n_actions"],
+            labels={"skm_v1_per90": "SKM v1 per 90", "skm_v2_per90": "SKM v2 per 90"},
+        )
+        fig2.update_traces(marker={"size": 9, "color": "#2a78d6"})
+        lim = [
+            min(board_v2["skm_v1_per90"].min(), board_v2["skm_v2_per90"].min()),
+            max(board_v2["skm_v1_per90"].max(), board_v2["skm_v2_per90"].max()),
+        ]
+        fig2.add_shape(
+            type="line", x0=lim[0], y0=lim[0], x1=lim[1], y1=lim[1],
+            line={"dash": "dot", "color": "#52514e", "width": 1},
+        )
+        st.plotly_chart(fig2, use_container_width=True)
+
+        board_v2["rank_v1"] = board_v2["skm_v1_per90"].rank(ascending=False)
+        board_v2["rank_v2"] = board_v2["skm_v2_per90"].rank(ascending=False)
+        board_v2["rank_change"] = board_v2["rank_v1"] - board_v2["rank_v2"]
+        st.markdown("**Biggest movers (v1 → v2 rank)**")
+        st.dataframe(
+            board_v2.sort_values("rank_change", ascending=False)[
+                ["player", "rank_v1", "rank_v2", "rank_change", "skm_v1_per90", "skm_v2_per90"]
+            ].head(10),
+            use_container_width=True,
+        )
+    except DataNotFoundError as exc:
+        st.info(f"{exc} — v1 vs v2 comparison hidden until credits are built.")

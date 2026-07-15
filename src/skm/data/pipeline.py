@@ -74,17 +74,37 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Build SKM events parquet from StatsBomb open data")
     parser.add_argument("--competition", default=DEFAULT_COMPETITION)
     parser.add_argument("--season", default=DEFAULT_SEASON)
+    parser.add_argument(
+        "--competitions",
+        default=None,
+        help='Multiple competitions as "Name:Season,Name:Season" (overrides --competition/--season)',
+    )
     parser.add_argument("--output", type=str, default=str(DATA_PROCESSED / "events.parquet"))
     parser.add_argument("--max-matches", type=int, default=None, help="Limit matches (for testing)")
     parser.add_argument("--no-cache", action="store_true", help="Skip raw JSON cache")
     args = parser.parse_args(argv)
 
-    df = build_events_dataframe(
-        competition=args.competition,
-        season=args.season,
-        max_matches=args.max_matches,
-        cache=not args.no_cache,
-    )
+    if args.competitions:
+        pairs = [tuple(p.split(":", 1)) for p in args.competitions.split(",") if ":" in p]
+        df = pd.concat(
+            [
+                build_events_dataframe(
+                    competition=comp,
+                    season=season,
+                    max_matches=args.max_matches,
+                    cache=not args.no_cache,
+                )
+                for comp, season in pairs
+            ],
+            ignore_index=True,
+        )
+    else:
+        df = build_events_dataframe(
+            competition=args.competition,
+            season=args.season,
+            max_matches=args.max_matches,
+            cache=not args.no_cache,
+        )
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
