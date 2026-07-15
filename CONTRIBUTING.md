@@ -22,6 +22,13 @@ skm-build-scores --max-games 5
 
 # full open sample
 ./scripts/run_full_phase2.sh
+
+# optional deeper layers, in order
+skm-build-moments    # segment matches into moments
+skm-build-credits    # v2: moment-level player credits
+skm-build-360        # attach StatsBomb 360 defender geometry to difficulty
+skm-build-phase6     # v3: position-normalized ranking
+skm-export-replay --game-id <id>   # HTML match replay with live SKM overlays
 ```
 
 ## Tests and lint
@@ -43,10 +50,10 @@ Reports are written to `data/reports/` (gitignored).
 
 ## Further reading
 
+- [docs/RESULTS.md](docs/RESULTS.md) — validated findings and headline numbers
 - [docs/ROADMAP.md](docs/ROADMAP.md) — planned work
 - [docs/SKM_MARKET_POSITIONING.md](docs/SKM_MARKET_POSITIONING.md) — metric claims and limits
 - [docs/CASE_STUDIES.md](docs/CASE_STUDIES.md) — example validation narratives
-- [PROGRESS.md](PROGRESS.md) — current status
 
 ## External benchmarks
 

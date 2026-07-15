@@ -1,18 +1,37 @@
 # SKM — Skill-Key Moments
 
-Open-source pipeline for **process-based player valuation** in football.
+[![CI](https://github.com/ChinmayA301/skm-football/actions/workflows/ci.yml/badge.svg)](https://github.com/ChinmayA301/skm-football/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**SKM v1** scores every on-ball action with VAEP **ΔP** plus difficulty (**D**), context (**C**), and role (**R**). The long-term goal is a **moment-based** metric that credits players for involvement in match-winning phases—not only the ball carrier. See the [roadmap](docs/ROADMAP.md).
+An open, reproducible pipeline for **process-based player valuation** in
+football — built to answer a specific complaint: goals and assists reward
+the final touch, but football is a chain-reaction sport, and most of what
+decides matches happens before the ball reaches the box.
 
-**v0.2.0-dev** · StatsBomb open data, 216 matches across 5 competitions
-(Bundesliga 23/24 · World Cup 2022 · Euro 2024 · Ligue 1 22/23 · La Liga 20/21) · sklearn VAEP
+SKM values every on-ball action by its downstream effect on scoring
+probability (VAEP), then adjusts for **how difficult** the action was,
+**how much the moment mattered**, and **whether it was expected of the
+player's role** — before rolling actions up into match **moments** and
+crediting every player involved, not only the one who touched the ball
+last.
 
 ```
-SKM_i      = ΔP_i × (1 + 0.3·D_i + 0.3·C_i + 0.3·R_i)
-AdjSKM_i   = SKM_i × position_w × role_w × game_state_w × sequence_w   (v1.5)
+SKM_i    = ΔP_i × (1 + 0.3·D_i + 0.3·C_i + 0.3·R_i)
+AdjSKM_i = SKM_i × position_w × role_w × game_state_w × sequence_w
 ```
 
-Data: [StatsBomb open data](https://github.com/statsbomb/open-data) · Models: [socceraction](https://github.com/ML-KULeuven/socceraction) (VAEP, SPADL, xT)
+**Sample:** StatsBomb open data, 216 matches across 5 competitions
+(Bundesliga 2023/24 · World Cup 2022 · Euro 2024 · Ligue 1 2022/23 ·
+La Liga 2020/21) · 487,561 scored actions · 233 players with ≥400 actions.
+
+**What's validated:** two pre-registered targets — SKM shouldn't be a VAEP
+clone (ρ < 0.99) and shouldn't punish progressive midfield work (ρ > 0) —
+both pass under the position-normalized ranking. Real defender-position
+data (StatsBomb 360) lifts the difficulty model's held-out accuracy from
+0.69 to 0.83 AUC. Full numbers: [docs/RESULTS.md](docs/RESULTS.md).
+
+Data: [StatsBomb open data](https://github.com/statsbomb/open-data) ·
+Models: [socceraction](https://github.com/ML-KULeuven/socceraction) (VAEP, SPADL, xT)
 
 ---
 
@@ -20,21 +39,25 @@ Data: [StatsBomb open data](https://github.com/statsbomb/open-data) · Models: [
 
 ```mermaid
 flowchart LR
-  StatsBomb[StatsBomb_open_data]
+  StatsBomb[StatsBomb open data]
   Events[events.parquet]
-  VAEP[VAEP_deltaP]
-  SKM[SKM_DCR_combine]
-  Board[player_leaderboard]
-  StatsBomb --> Events --> VAEP --> SKM --> Board
+  VAEP[VAEP ΔP + D/C/R]
+  Moments[moment segmentation]
+  Credits[moment credits — v2]
+  V3[position-normalized — v3]
+  StatsBomb --> Events --> VAEP --> Moments --> Credits --> V3
 ```
 
-| Step | Command | Output |
-|------|---------|--------|
-| Ingest + features | `skm-build-events` | `data/processed/events.parquet` |
-| VAEP + SKM | `skm-build-scores` | `actions_scored.parquet`, `player_leaderboard.parquet` |
-| Moments (Phase 5) | `skm-build-moments` | `moments.parquet`, `moment_players.parquet` |
-| Moment credits (Phase 5b) | `skm-build-credits` | `player_credits.parquet`, `player_skm_v2.parquet` |
+| Stage | Command | Output |
+|---|---|---|
+| Ingest + features | `skm-build-events` | `events.parquet` |
+| VAEP + SKM (v1 / v1.5) | `skm-build-scores` | `actions_scored.parquet`, `player_leaderboard.parquet` |
+| Moment segmentation | `skm-build-moments` | `moments.parquet`, `moment_players.parquet` |
+| Moment credits (v2) | `skm-build-credits` | `player_credits.parquet`, `player_skm_v2.parquet` |
+| Real defender geometry (360) | `skm-build-360` | `D_360`, `skm_360` |
+| Position-normalized (v3) | `skm-build-phase6` | `player_skm_v3.parquet` |
 | Validation | `skm-validate` | `data/reports/` (generated locally) |
+| Match replay | `skm-export-replay --game-id <id>` | Self-contained HTML with live SKM overlays |
 | Dashboard | `streamlit run app/streamlit_app.py` | Interactive explorer |
 
 ---
@@ -54,51 +77,40 @@ skm-validate
 streamlit run app/streamlit_app.py
 ```
 
-Full open-data sample (34 matches):
+Full multi-competition sample (216 matches, ~15 min):
 
 ```bash
-skm-build-events
-./scripts/run_full_phase2.sh
+skm-build-events --competitions "1. Bundesliga:2023/2024,FIFA World Cup:2022,UEFA Euro:2024,Ligue 1:2022/2023,La Liga:2020/2021"
+skm-build-scores --competitions "1. Bundesliga:2023/2024,FIFA World Cup:2022,UEFA Euro:2024,Ligue 1:2022/2023,La Liga:2020/2021"
+skm-build-moments && skm-build-credits && skm-build-phase6
 skm-validate && skm-export-reports
 ```
 
 ---
 
-## v1.5 — Adjusted SKM weighting layer
+## The dashboard
 
-On top of base SKM, each action gets four modest multiplicative weights
-(`src/skm/models/weights.py`), producing `adjusted_skm`:
+`streamlit run app/streamlit_app.py` opens seven tabs:
 
-| Weight | What it captures | How it's built |
-|--------|------------------|----------------|
-| `position_weight` | Is this action type core to the player's position? (e.g. ST shot, DM interception, W take-on) | Hand-set prior table over StatsBomb starting positions × SPADL types, clipped 0.9–1.25 |
-| `role_weight` | Is this action type central to the player's *observed* role? | Role-cluster action rates vs global rates (data-driven), clipped 0.85–1.2 |
-| `game_state_weight` | Leverage: garbage time down (0.7 at ±3+), late close games up (1.3 at 85'+, ±1) | Running score + minute, clipped 0.6–1.4 |
-| `sequence_weight` | Credit the chain, not only the shooter | Non-shot actions in same-team chains ending in a shot get 1.15 |
+| Tab | What it shows |
+|---|---|
+| Leaderboard | Sortable SKM / adjusted SKM / ΔP / xT per-90 rankings |
+| Match timeline | Cumulative SKM by team across a single match |
+| Player profile | Per-player D/C/R component breakdown (radar chart) |
+| Hidden influence | Players ranked much higher by SKM than by xT or goals |
+| Validation | Tier 1–3 correlations against ΔP, xT, outcomes, and public ratings |
+| Moments | Moment map per match, top moments, v1-vs-v2 rank movers |
+| Label moments | Collects pairwise "which moment mattered more" judgments for the expert-preference calibration in [docs/ROADMAP.md](docs/ROADMAP.md) |
 
-Design intent: a routine tap-in at 4–0 no longer gets the same boost as a
-late finish in a close game, and buildup actions before a shot share credit.
+To deploy this dashboard on Streamlit Cloud, see [docs/DEPLOY.md](docs/DEPLOY.md).
 
-**Caveats (disclosed, not hidden):** `position_weight` is a prior table, not a
-fitted model; `game_state_weight` overlaps partially with C (both kept small);
-sequence chains are a same-team/time-gap heuristic, not tracked possessions.
-The open sample has no knockout matches, so competition-stage weighting is
-deferred (see roadmap Phase 7).
+## Match replay
 
----
-
-## v1 limitations
-
-SKM v1 (**SKM-Chance**) is an **action-level** proxy, not the final moment-based metric.
-
-| Finding (Bundesliga 23/24 open sample) | Implication |
-|--------------------------------------|-------------|
-| ρ(skm, ΔP) ≈ 0.996 | SKM tracks VAEP net value closely today |
-| ρ(skm, progressive_per90) ≈ −0.11 | Progressive midfield work is under-rewarded |
-| ρ(skm, xG) ≈ 0.25; assists ≈ 0.47 | Not a pure goals/assists stat, but offense-skewed |
-| 216-match multi-competition sample | Mixes club + tournament contexts; FotMob benchmarks cover the Bundesliga slice only |
-
-Example: **Tella / Boniface** rank high on SKM per90 with modest FotMob season ratings; **Xhaka** has a top FotMob rating but lower v1 SKM—motivation for moment-based v2. Details in [case studies](docs/CASE_STUDIES.md) and [market positioning](docs/SKM_MARKET_POSITIONING.md).
+`skm-export-replay --game-id <id>` renders a self-contained HTML page
+that replays a real match's event stream on a 2D pitch — moments flagged
+as they happen, cumulative team SKM bars, a live top-player ticker — with
+an optional mode to overlay the same flags on a local video clip you own,
+synced to the match clock. No broadcast footage is bundled or fetched.
 
 ---
 
@@ -109,23 +121,37 @@ skm-export-reports
 skm-validate
 ```
 
-- **Tier 1:** SKM vs ΔP, xT  
-- **Tier 2:** vs goals, assists, xG, progressive actions  
-- **Tier 3:** vs FotMob benchmarks in [`data/external/bundesliga_2324_benchmarks.csv`](data/external/bundesliga_2324_benchmarks.csv)
+- **Tier 1:** SKM vs ΔP, xT
+- **Tier 2:** vs goals, assists, xG, progressive actions
+- **Tier 3:** vs FotMob ratings in [`data/external/bundesliga_2324_benchmarks.csv`](data/external/bundesliga_2324_benchmarks.csv) (Bundesliga slice only)
 
-Reports are written to `data/reports/` (not committed; regenerate after building scores).
+Reports write to `data/reports/` (not committed; regenerate after building scores). Full headline results: **[docs/RESULTS.md](docs/RESULTS.md)**.
+
+---
+
+## Known limits
+
+| Limit | Why it's there |
+|---|---|
+| ρ(v3, progressive/90) is barely positive (+0.06) | The position-normalization fix works, but the effect is modest — next lever is moment-type weighting, not more tuning |
+| 216-match sample mixes club and tournament contexts | Not full seasons; FotMob benchmark coverage is Bundesliga-only |
+| Off-ball involvement not credited | StatsBomb 360 samples positions at event time only, not continuously |
+| Position/weight priors are hand-set, not fitted | Disclosed and clipped to modest ranges (see [docs/RESULTS.md](docs/RESULTS.md)) |
+| No knockout-stage weighting yet | Deferred to Phase 7 |
 
 ---
 
 ## Documentation
 
 | Document | Description |
-|----------|-------------|
-| [docs/ROADMAP.md](docs/ROADMAP.md) | Vision and planned phases (moments → unified SKM) |
-| [docs/SKM_MARKET_POSITIONING.md](docs/SKM_MARKET_POSITIONING.md) | What SKM can and cannot claim vs market stats |
+|---|---|
+| [docs/RESULTS.md](docs/RESULTS.md) | Validated findings and headline numbers |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Vision and what's next |
+| [docs/SKM_MARKET_POSITIONING.md](docs/SKM_MARKET_POSITIONING.md) | What SKM can and cannot claim vs. market stats |
 | [docs/CASE_STUDIES.md](docs/CASE_STUDIES.md) | Example players (validation narratives) |
 | [docs/RELATED_WORK.md](docs/RELATED_WORK.md) | VAEP, xT, and related frameworks |
-| [PROGRESS.md](PROGRESS.md) | Implementation status |
+| [docs/WORKED_EXAMPLE.md](docs/WORKED_EXAMPLE.md) | One real action, fully decomposed |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | Streamlit Cloud deployment |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Setup, tests, and contribution guide |
 
 ---
