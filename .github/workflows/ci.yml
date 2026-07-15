@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip hatchling
-          pip install -e ".[dev]"
+          pip install -e ".[dev,model,app]"
 
       - name: Run tests
         run: pytest -q
