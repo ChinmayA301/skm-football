@@ -25,23 +25,41 @@ reproducible from this repo (`skm-build-scores` → `skm-build-moments` →
 | Check | Value | Reading |
 |---|---|---|
 | ρ(SKM v1, ΔP) | 0.996 | v1 tracks VAEP closely — D/C/R adjust little at these weights |
-| ρ(SKM v2, ΔP) | **0.964** | moment credits genuinely diverge from raw VAEP (Phase 6 target <0.99 ✅) |
+| ρ(SKM v2, ΔP) | **0.959** | moment credits genuinely diverge from raw VAEP (target <0.99 ✅) |
+| ρ(SKM v3, ΔP) | **0.868** | position-normalized v3 diverges further ✅ |
 | ρ(SKM v1, xT) | 0.50 | SKM is not a ball-progression grid |
 | ρ(SKM v1, assists/90) | 0.29 | not an assists clone |
 | ρ(SKM v1, xG/90) | 0.18 | not a shooting-volume clone |
-| ρ(SKM, progressive/90) | −0.07 (v1) / −0.20 (v2) | **the open problem** — see below |
+| ρ(SKM, progressive/90) | −0.21 (v2) → **+0.06 (v3)** | the sign flip — see finding 3 |
 | ρ(SKM v1, FotMob rating) | −0.57 (n=11, BL only) | SKM disagrees with reputation ratings; sample tiny |
+| Held-out AUC, completion model | 0.690 → **0.829** with 360 geometry | real defender positions beat the binary pressure flag |
 
-## The two findings worth writing about
+## The findings worth writing about
 
 **1. Moment sharing favors attackers (a real, structural result).**
 The Phase 6 target ρ(SKM, progressive/90) > 0 fails on 233 players, and it
-fails *worse* under moment sharing (−0.20 vs −0.07). Redistributing moment
+fails *worse* under moment sharing (−0.21 vs −0.07). Redistributing moment
 value by touch share channels credit toward players present in shot-ending
 moments. An 8× progressive bonus only halves the deficit. Conclusion:
 progressive work must be re-priced structurally (per-position
 normalization), not parameter-tuned. This is an honest negative result —
 and it is what separates the project from marketing.
+
+**3. The structural fix works: position normalization flips the sign.**
+`skm_v3` (z-score within primary position group, pre-registered before
+results were computed) passes both Phase 6 targets: ρ(v3, ΔP) = 0.868 and
+ρ(v3, progressive) = +0.06 — barely positive, honestly stated, but the
+metric no longer punishes progressive volume. Position leaders are
+face-valid: ball-playing CBs (Young-Gwon Kim, Koulibaly, Orban), Freuler
+top DM, Sommer top GK. v3 answers "how good vs positional peers" — the
+scout's question — at the cost of cross-position magnitude comparisons.
+
+**4. Real defender geometry beats the pressure flag.**
+Refitting completion difficulty with StatsBomb 360 freeze-frame positions
+lifts held-out AUC from 0.690 to 0.829. Propagated through the metric,
+congestion midfielders rise (Gündoğan, Mac Allister, Rodri) and wide
+players receiving in space fall (Doku, Carrasco) — the event-only model
+had been over-crediting touchline actions.
 
 **2. Shootout kicks are a VAEP landmine (found and fixed).**
 Penalty-shootout actions (period 5) have no "next k actions", so VAEP

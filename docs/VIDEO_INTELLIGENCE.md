@@ -38,6 +38,18 @@ and `skm_360`.
 The held-out AUC gap is the gate result: real defender geometry makes the
 difficulty component substantially more accurate, not just different.
 
+**Gate 2 — propagation review (`scripts/propagate_d360.py`):** replacing D
+with D_360 across the full stack (ΔP/C/R/weights unchanged) keeps rankings
+stable overall (ρ = 0.995, 233 players) but moves players *systematically*:
+the biggest risers are congestion midfielders (Schick +55 ranks, Merino,
+Griezmann, Gündoğan, Mac Allister, Çalhanoğlu, Rodri) and the biggest
+fallers are wide players who receive in space (Carrasco −21, Doku −19,
+Ziyech −15) — the event-only model had been over-crediting touchline
+actions and under-crediting execution in central crowds. Outputs:
+`player_leaderboard_360.parquet`, `player_skm_v2_360.parquet`. Phase 6
+correlations are essentially unchanged (progressive re-pricing remains the
+open Phase 6 problem).
+
 **Limits (disclosed):** frames only show the camera's visible area
 (`n_visible` tracks this); no player identities in frames; no continuous
 tracking between events — off-ball runs are still invisible unless they
@@ -102,7 +114,7 @@ tagged, inter-rater agreement reported before any training run).
 | Step | Gate to proceed |
 |---|---|
 | 1. `skm-build-360` full run | ✅ **passed** — held-out AUC 0.690 → 0.829 |
-| 2. Feed D_360 into skm/moments for the 360 slice | rank changes reviewed, documented |
+| 2. Feed D_360 into skm/moments | ✅ **passed** — see below |
 | 3. Collect ~200 expert pairs | inter-rater agreement > chance |
 | 4. Preference-calibrate moment values | held-out pair accuracy > 0.65 |
 | 5. CV pilot on one owned clip | agreement with 360 geometry at event times |

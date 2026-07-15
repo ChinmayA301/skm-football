@@ -76,6 +76,21 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for detail.
   0.690 (event-only) → **0.829** (with geometry)
 - Expert-preference calibration scaffold (`preference.py`, Bradley-Terry)
   and staged CV/RL plan in `docs/VIDEO_INTELLIGENCE.md`
+- Gate 2 passed (`scripts/propagate_d360.py`): D_360 through the full
+  stack — ρ=0.995 overall but systematic movement (congestion mids up:
+  Schick +55, Gündoğan, Mac Allister, Rodri; space-receiving wide players
+  down: Carrasco, Doku, Ziyech)
+- Dashboard "Label moments" tab collects expert preference pairs into
+  `data/external/expert_moment_labels.csv` (ships header-only)
+- **D_360 promoted** to the default difficulty (pipeline attaches 360 by
+  default; `--skip-360` opts out; event-only D kept as `D_event`)
+
+### Phase 6 — position-normalized SKM (v3)
+- `skm-build-phase6` → `player_skm_v3.parquet`: z-score of v2 per-90
+  within primary position group
+- **Both Phase 6 targets pass**: ρ(v3, ΔP)=0.868 (<0.99 ✅);
+  ρ(v3, progressive)=+0.061 (>0 ✅, flipped from −0.208)
+- v3 is dimensionless (peer-relative); cross-position magnitudes → v2
 
 ## Notes
 

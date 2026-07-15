@@ -1,0 +1,12 @@
+# Streamlit Cloud deployment requirements (dashboard + model libs).
+# Local development should use `pip install -e '.[app,model,dev]'` instead.
+numpy==1.26.4
+pandas==2.2.2
+pyarrow==21.0.0
+scipy==1.13.1
+scikit-learn==1.4.2
+socceraction==1.5.3
+statsbombpy==1.18.0
+multimethod==1.12
+streamlit==1.50.0
+plotly==6.7.0

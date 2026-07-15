@@ -64,6 +64,7 @@ def run_phase2(
     max_games: Optional[int] = None,
     skip_xt: bool = False,
     competitions: Optional[list] = None,
+    skip_360: bool = False,
 ) -> pd.DataFrame:
     """competitions: optional list of (competition_name, season_name) pairs;
     overrides the single competition/season arguments when given."""
@@ -114,6 +115,19 @@ def run_phase2(
     else:
         actions["xt_value"] = 0.0
 
+    if not skip_360:
+        # Layer 3: geometry-aware difficulty from 360 freeze frames where
+        # available (gate-passed: held-out AUC 0.690 → 0.829). D keeps the
+        # event-only value on uncovered rows; D_event preserves it everywhere.
+        try:
+            from skm.models.freeze_frame import attach_frame_features, fit_difficulty_360
+
+            actions = attach_frame_features(actions)
+            actions["D_event"] = actions["D"]
+            actions["D"] = fit_difficulty_360(actions).values
+        except Exception as exc:
+            logger.warning("360 layer failed (%s); keeping event-only D", exc)
+
     actions["skm"] = combine_skm(actions).values
 
     # v1.5 weighting layer → adjusted_skm
@@ -144,6 +158,7 @@ def main(argv: Optional[list] = None) -> int:
     parser.add_argument("--actions-output", default=str(ACTIONS_SCORED_PARQUET))
     parser.add_argument("--leaderboard-output", default=str(PLAYER_LEADERBOARD_PARQUET))
     parser.add_argument("--skip-xt", action="store_true")
+    parser.add_argument("--skip-360", action="store_true", help="Skip 360 freeze-frame difficulty")
     args = parser.parse_args(argv)
 
     competitions = None
@@ -158,6 +173,7 @@ def main(argv: Optional[list] = None) -> int:
         max_games=args.max_games,
         skip_xt=args.skip_xt,
         competitions=competitions,
+        skip_360=args.skip_360,
     )
 
     actions_path = Path(args.actions_output)

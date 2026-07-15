@@ -34,7 +34,7 @@ except DataNotFoundError as exc:
     )
     st.stop()
 
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
     [
         "Leaderboard",
         "Match timeline",
@@ -42,6 +42,7 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
         "Hidden influence",
         "Validation",
         "Moments",
+        "Label moments",
     ]
 )
 
@@ -261,3 +262,104 @@ with tab6:
         )
     except DataNotFoundError as exc:
         st.info(f"{exc} — v1 vs v2 comparison hidden until credits are built.")
+
+with tab7:
+    st.subheader("Label moments — expert preference pairs")
+    st.caption(
+        "Pick which of two moments mattered more. Pairs feed the Bradley-Terry "
+        "calibration (`skm.models.preference`). Compare the *situations*, not "
+        "the players' reputations — that is the whole point."
+    )
+    try:
+        from skm.viz.loaders import load_moment_players, load_moments
+
+        moments7 = load_moments()
+        mp7 = load_moment_players()
+    except DataNotFoundError as exc:
+        st.warning(str(exc))
+        st.stop()
+
+    import csv
+    import random
+
+    from skm.config import PROJECT_ROOT
+
+    LABELS_CSV = PROJECT_ROOT / "data" / "external" / "expert_moment_labels.csv"
+    annotator = st.text_input("Annotator", value="chinmay")
+
+    # Non-trivial pool: moments with meaningful absolute value
+    pool = moments7[moments7["skm_sum"].abs() >= moments7["skm_sum"].abs().median()]
+
+    def new_pair():
+        a, b = pool.sample(2, random_state=random.randint(0, 10**6)).to_dict("records")
+        st.session_state["pair"] = (a, b)
+
+    if "pair" not in st.session_state:
+        new_pair()
+    mA, mB = st.session_state["pair"]
+
+    names7 = player_name_map(events)
+
+    def moment_card(col, m, tag):
+        col.markdown(f"### Moment {tag}")
+        col.markdown(
+            f"**{m['moment_type'].replace('_', ' ')}** · game {m['game_id']} · "
+            f"{m['start_minute']:.0f}' · score diff {m['score_diff_start']:+d}\n\n"
+            f"{m['n_actions']} actions · shot: {'yes' if m['contains_shot'] else 'no'}"
+            f" · goal: {'yes' if m['contains_goal'] else 'no'}"
+        )
+        inv = mp7[mp7["moment_id"] == m["moment_id"]].nlargest(3, "n_actions").copy()
+        inv["player"] = inv["player_id"].map(names7)
+        col.dataframe(
+            inv[["player", "n_actions", "involvement_share"]],
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    c1, c2 = st.columns(2)
+    moment_card(c1, mA, "A")
+    moment_card(c2, mB, "B")
+
+    def save_label(preferred: str):
+        is_new = not LABELS_CSV.exists() or LABELS_CSV.stat().st_size == 0
+        with LABELS_CSV.open("a", newline="") as f:
+            w = csv.writer(f)
+            if is_new:
+                w.writerow(
+                    ["game_id_a", "moment_id_a", "game_id_b", "moment_id_b",
+                     "preferred", "annotator", "note"]
+                )
+            w.writerow(
+                [mA["game_id"], mA["moment_id"], mB["game_id"], mB["moment_id"],
+                 preferred, annotator, ""]
+            )
+        new_pair()
+
+    b1, b2, b3 = st.columns(3)
+    if b1.button("⬅ A mattered more", use_container_width=True):
+        save_label("a")
+        st.rerun()
+    if b2.button("Skip pair", use_container_width=True):
+        new_pair()
+        st.rerun()
+    if b3.button("B mattered more ➡", use_container_width=True):
+        save_label("b")
+        st.rerun()
+
+    if LABELS_CSV.exists():
+        import pandas as pd
+
+        labels = pd.read_csv(LABELS_CSV)
+        st.metric("Pairs labeled", len(labels))
+        if len(labels):
+            st.download_button(
+                "Download labels CSV",
+                LABELS_CSV.read_text(),
+                file_name="expert_moment_labels.csv",
+                mime="text/csv",
+                help="On Streamlit Cloud the container disk is ephemeral — "
+                "download labels you want to keep.",
+            )
+        if len(labels) >= 10:
+            st.caption("Enough pairs to fit a first preference model: "
+                       "`skm.models.preference.fit_preference_model`")

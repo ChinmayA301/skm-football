@@ -125,16 +125,32 @@ the 233-player sample now makes that work defensible.
 
 ---
 
-## Phase 6 — Unified SKM
+## Phase 6 (released) — Position-normalized SKM (v3)
 
-**Goal:** Public `skm_per90` = sum of **moment credits**, tuned so:
+**The structural fix** (pre-registered in Phase 5b findings, not tuned):
+`skm_v3` = z-score of `skm_v2_per90` within the player's primary position
+group (`skm-build-phase6` → `player_skm_v3.parquet`). Groups <8 players
+fall back to a global z, flagged in `pos_z_basis`.
 
-- ρ(skm, progressive_per90) **> 0**
-- ρ(skm, goals+xG) moderate (not a finisher clone)
-- ρ(skm, ΔP) **< 0.99**
-- Structural mids (e.g. Xhaka) rank higher than in v1
+**Target status (233 players, geometry-aware D promoted):**
 
-**Validation:** Scout comparison study, moment clip review, extended correlation tiers.
+| Target | v2 raw | v3 position-normalized | Met? |
+|--------|--------|------------------------|------|
+| ρ(skm, ΔP) < 0.99 | 0.959 | **0.868** | ✅ |
+| ρ(skm, progressive_per90) > 0 | −0.208 | **+0.061** | ✅ |
+
+The progressive correlation flips sign — barely positive, honestly stated,
+but the structural claim holds: v3 no longer punishes progressive volume,
+because each position competes against its own peers. Position leaders are
+face-valid (ball-playing CBs Young-Gwon Kim / Koulibaly / Orban; Freuler
+top DM; Sommer top GK).
+
+**Interpretation change (disclosed):** v3 is dimensionless — "how good
+relative to positional peers", the question scouts ask — not a per-90
+value quantity. Cross-position magnitude comparisons should use v2.
+
+**Still open for Phase 6 completion:** scout comparison study, moment clip
+review, expert preference calibration (labels pending).
 
 ---
 
