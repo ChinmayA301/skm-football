@@ -1,6 +1,11 @@
 # Example player narratives
 
-Illustrative comparisons from the **StatsBomb open Bundesliga 2023/24 sample** (34 matches). Ranks are approximate on that sample—not full-season minutes or fixtures. FotMob figures are season benchmarks from `data/external/bundesliga_2324_benchmarks.csv`.
+Illustrative comparisons from the **StatsBomb open data sample** (216
+matches: Bundesliga 23/24, World Cup 2022, Euro 2024, Ligue 1 22/23, La
+Liga 20/21). Ranks are approximate on this sample—not full-season minutes
+or fixtures. FotMob figures are Bundesliga 23/24 season benchmarks from
+`data/external/bundesliga_2324_benchmarks.csv` and only apply to that
+competition's players.
 
 Regenerate disagreement tables: `skm-validate` → `data/reports/validation_disagreements.csv`.
 
@@ -52,3 +57,23 @@ Cases that motivate moment-based v2 (structural / midfield work vs attack-leanin
 ## Same team, same position
 
 Use the leaderboard to compare teammates in the same role (e.g. two central midfielders on one club) after running the full pipeline.
+
+---
+
+## Position-normalized ranking (v3)
+
+`skm_v3` z-scores each player against their own position group instead of
+the whole league — the fix for the Xhaka problem above. On the 216-match
+sample, position leaders by v3 are face-valid: ball-playing centre-backs
+(Young-Gwon Kim, Kalidou Koulibaly, Willi Orban), Remo Freuler as the top
+defensive midfielder, Yann Sommer as the top goalkeeper. Full methodology
+and validation targets: [RESULTS.md](RESULTS.md).
+
+## Video intelligence: real defender geometry
+
+StatsBomb 360 freeze-frames give real broadcast-derived defender positions,
+not an approximation. Refitting the difficulty component with that geometry
+lifts held-out prediction accuracy (AUC) from 0.690 to 0.829, and shifts
+rankings toward players who execute under genuine central pressure (e.g.
+Schick, Gündoğan, Rodri) and away from wide players who mostly receive in
+space (Doku, Carrasco). Details in [RESULTS.md](RESULTS.md).

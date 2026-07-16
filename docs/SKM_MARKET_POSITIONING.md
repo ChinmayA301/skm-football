@@ -80,24 +80,26 @@ Xhaka is the archetype for **why v2 adds moment + control layers**: reputation a
 
 ---
 
-## Validation we publish (v1)
+## Validation we publish
 
-From `skm-validate` on the open sample (reproduce locally):
+From `skm-validate` on the 216-match open sample (reproduce locally):
 
-| Correlation (Spearman) | Approx. |
-|------------------------|---------|
-| SKM vs ΔP | ~0.996 |
-| SKM vs xT | ~0.83 |
-| SKM vs assists | ~0.47 |
-| SKM vs xG | ~0.25 |
-| SKM vs progressive per90 | **~−0.11** |
+| Correlation (Spearman) | v1 | v3 (position-normalized) |
+|------------------------|----|----|
+| SKM vs ΔP (not a VAEP clone) | 0.996 | **0.868** |
+| SKM vs progressive actions/90 | −0.13 | **+0.06** |
 
-Tier 3: merge [`data/external/bundesliga_2324_benchmarks.csv`](../data/external/bundesliga_2324_benchmarks.csv) for FotMob comparison.
+Both targets pass under v3 — full breakdown, including the v2 intermediate
+step and the video-intelligence (360 geometry) results, in
+[RESULTS.md](RESULTS.md).
+
+Tier 3: merge [`data/external/bundesliga_2324_benchmarks.csv`](../data/external/bundesliga_2324_benchmarks.csv) for FotMob comparison (Bundesliga slice only).
 
 ---
 
 ## See also
 
+- [RESULTS.md](RESULTS.md) — validated findings and headline numbers
 - [ROADMAP.md](ROADMAP.md) — phases
 - [RELATED_WORK.md](RELATED_WORK.md) — VAEP, xT
 - [CASE_STUDIES.md](CASE_STUDIES.md) — player buckets
