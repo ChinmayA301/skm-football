@@ -75,6 +75,62 @@ frame (e.g. a clip starting at 30:30 of the first half → `--offset 1830`).
 - The foot point (bottom-center of the box) approximates ground position;
   airborne players and keepers diving violate it.
 
+## First real-clip run (WC 2022 final, honest result)
+
+Run on a locally-owned broadcast clip of Argentina–France (game 3869685,
+second half, 68:53–70:28 — a 95 s window with 33 StatsBomb 360-covered
+events). This is the documented reality, negative parts included.
+
+**What ran successfully on real footage:**
+
+| Step | Result |
+|---|---|
+| Detection + tracking (yolov8n, stride 3) | 5,841 detections over 948 frames in 100 s |
+| Players | 5,814 person detections tracked |
+| Homography projection (center-circle calibration, 0.36 m reprojection) | 98% of detections land on the pitch |
+| Team assignment (2-means on shirt color) | ran |
+
+**What failed, and why it's the right outcome:**
+
+- **Ball detection: 24 of 948 frames.** The generic COCO "sports ball"
+  class barely catches a fast, small, motion-blurred football. With so few
+  ball frames — and the broadcast camera panning away from the midfield
+  calibration — no frame had a ball *and* a player within the 3 m carrier
+  threshold. Pressure frames: **0**.
+- **Gate verdict: 0 pairs, not evaluable.** The gate correctly *refused to
+  emit a ρ/MAE number* rather than fabricate agreement from nothing. A
+  no-number result is the honest one here.
+
+**Diagnosis — what a passing run actually needs:**
+
+1. **A football-specific detector.** Ball detection is the bottleneck; a
+   model trained on football (ball + players) rather than generic COCO is
+   the single biggest lever.
+2. **Calibration that tracks camera motion.** A single homography is valid
+   for one camera pose; broadcast footage pans continuously. Either a
+   near-static tactical/wide camera, or per-frame homography from automated
+   pitch-line detection.
+3. **Optionally, anchor the carrier on the StatsBomb ball location** at
+   event times instead of CV ball detection — this tests player
+   detection/projection independently of the flaky ball detector (a weaker
+   but more robust gate variant; future work).
+
+The takeaway: the pipeline is real and runs on real footage, the gate works
+as a guard, and broadcast main-camera footage with a generic detector is
+**not** sufficient for a trustworthy CV pressure measurement — exactly what
+this staged, gated design is meant to surface before any number is trusted.
+
+## Environment note (numpy / opencv)
+
+Installing `[video]` pulls `opencv-python`/`ultralytics`, whose recent
+builds prefer `numpy>=2`, while `socceraction` requires `numpy<2`. Pin
+numpy back after installing the extra:
+
+```bash
+pip install -e ".[video]"
+pip install "numpy>=1.26,<2.0"   # ultralytics + opencv run fine on 1.26 at runtime
+```
+
 ## Why the gate exists
 
 The rest of SKM's difficulty pipeline runs on measured StatsBomb 360

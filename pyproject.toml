@@ -34,7 +34,10 @@ app = [
     "matplotlib>=3.8.0",
 ]
 video = [
+    # ultralytics/opencv recent builds prefer numpy>=2 but socceraction needs
+    # numpy<2; they run fine on 1.26 at runtime. See docs/CV_PILOT.md.
     "ultralytics>=8.2",
+    "numpy>=1.26,<2.0",
 ]
 
 [project.scripts]

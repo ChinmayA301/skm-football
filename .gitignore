@@ -24,3 +24,6 @@ data/reports/
 !data/external/README.md
 
 notebooks/.ipynb_checkpoints/
+
+# YOLO model weights (downloaded on demand)
+*.pt
