@@ -33,6 +33,9 @@ app = [
     "plotly>=5.18.0",
     "matplotlib>=3.8.0",
 ]
+video = [
+    "ultralytics>=8.2",
+]
 
 [project.scripts]
 skm-build-events = "skm.data.pipeline:main"
@@ -41,6 +44,7 @@ skm-build-moments = "skm.models.moments:main"
 skm-build-credits = "skm.models.credits:main"
 skm-build-360 = "skm.models.freeze_frame:main"
 skm-build-phase6 = "skm.models.phase6:main"
+skm-video-pilot = "skm.video.pilot:main"
 skm-export-reports = "skm.viz.reports:main"
 skm-export-replay = "skm.viz.replay:main"
 skm-validate = "skm.viz.validation_cli:main"
