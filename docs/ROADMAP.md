@@ -44,6 +44,11 @@ Built on event data (`skm.models.contextual`, `skm-build-v5`):
   actions weighted up, garbage time down.
 - **Press-breaking**: successful retention/progression under pressure,
   scaled by 360 defender distance.
+- **Match importance** (`skm.models.match_context`, `--match-context`):
+  opponent strength (each team's in-competition goal-difference z-score, so
+  facing a stronger side is weighted up) × competition stage (Group → R16 →
+  QF → SF → **Final**; the WC final scores ~1.66× a group game). Fixes the
+  stub `opponent_quality` (was constant 1.0).
 
 Result on the 216-match sample: ρ(v5, goals) ≈ **−0.07** (decisive actions
 rewarded heavily but *within context*, not by raw output); top-40 spans
@@ -65,6 +70,15 @@ detection is weak — see the honest run write-up). Anything that can't be
 done cleanly on event data (true causal chains, continuous pressure
 geometry, off-ball chance creation) is scoped **here**, not faked in the
 current metric.
+
+**Human-reviewed context — already wired.** Signals automation can't derive —
+player-vs-player matchup quality (beating a specific elite fullback; 360 has
+no player identities) and real-world stakes (title / qualification /
+relegation) — are an optional reviewer-set per-game multiplier
+(`data/external/human_match_context.csv`, ships empty; absent → neutral 1.0,
+never fabricated). This is the honest home for them in the end-goal pipeline:
+a human supplies what the data can't, the same pattern as the expert
+moment-preference labels — not automated guesses.
 
 ## Also next
 

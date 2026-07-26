@@ -100,10 +100,15 @@ def build_decisive_actions(
     actions: pd.DataFrame,
     events: pd.DataFrame,
     games: pd.DataFrame,
+    importance: Optional[pd.Series] = None,
 ) -> pd.DataFrame:
     """Return a per-action frame of decisive actions with context-weighted value.
 
     value = base[type] × difficulty(xg) × game_state(minute, score, result)
+            × match_importance(opponent strength × competition stage)
+
+    `importance` is an optional per-action multiplier aligned to `actions`
+    (from `skm.models.match_context.match_importance`); defaults to 1.0.
     """
     import socceraction.spadl as spadl
 
@@ -150,6 +155,7 @@ def build_decisive_actions(
         winners[int(gid)] = (int(gm.get("home_team_id", -1)) if hs > as_
                              else int(gm.get("away_team_id", -1)) if as_ > hs else None)
     named["team_won"] = named.apply(lambda r: winners.get(int(r["game_id"])) == int(r["team_id"]), axis=1)
+    named["importance"] = 1.0 if importance is None else importance.reindex(named.index).fillna(1.0)
 
     rows = []
     for _, r in named.iterrows():
@@ -171,6 +177,7 @@ def build_decisive_actions(
             continue
         diff = _difficulty_mult(kind, r.get("xg", np.nan))
         gs = _game_state_mult(r["minute"], int(r.get("score_diff_before", 0) or 0), bool(r["team_won"]))
+        imp = float(r.get("importance", 1.0))
         rows.append(
             {
                 "player_id": r["player_id"],
@@ -181,7 +188,8 @@ def build_decisive_actions(
                 "score_diff_before": int(r.get("score_diff_before", 0) or 0),
                 "difficulty_mult": diff,
                 "game_state_mult": gs,
-                "value": base * diff * gs,
+                "importance_mult": imp,
+                "value": base * diff * gs * imp,
             }
         )
     return pd.DataFrame(rows)
@@ -218,6 +226,7 @@ def build_v5(
     w_competence: float = 1.0,
     w_decisive: float = 1.0,
     w_pressure: float = 0.5,
+    importance: Optional[pd.Series] = None,
 ) -> pd.DataFrame:
     """Blend v4 competence with per-90 decisive-action and pressure value into
     a standardized v5 rating. All three parts are z-standardized so the blend
@@ -227,7 +236,7 @@ def build_v5(
     per_min = counts["n_actions"].sum() / max(len(actions) / 90.0, 1.0)
     counts["minutes_est"] = counts["n_actions"] / max(per_min / 90.0, 1e-6)
 
-    dec = build_decisive_actions(actions, events, games)
+    dec = build_decisive_actions(actions, events, games, importance=importance)
     dec_tot = dec.groupby("player_id")["value"].sum().rename("decisive_total")
 
     press = actions.copy()
@@ -256,6 +265,10 @@ def main(argv: Optional[list] = None) -> int:
     parser = argparse.ArgumentParser(description="SKM v5 (competence + context decisive + pressure)")
     parser.add_argument("--competence-input", default=str(DATA_PROCESSED / "player_competence.parquet"))
     parser.add_argument("--output", default=str(PLAYER_V5_PARQUET))
+    parser.add_argument("--match-context", action="store_true",
+                        help="Fetch competition stage + compute opponent strength (network)")
+    parser.add_argument("--human-context", default=None,
+                        help="CSV of reviewer-set per-game importance multipliers")
     args = parser.parse_args(argv)
 
     actions = pd.read_parquet(ACTIONS_SCORED_PARQUET)
@@ -263,7 +276,18 @@ def main(argv: Optional[list] = None) -> int:
     games = pd.read_parquet(GAMES_PARQUET).set_index("game_id")
     competence = pd.read_parquet(args.competence_input)
 
-    board = build_v5(actions, events, games, competence)
+    importance = None
+    if args.match_context or args.human_context:
+        from skm.models.match_context import fetch_stage_map, load_human_context, match_importance
+
+        g = games.reset_index()
+        pairs = g[["competition", "season"]].drop_duplicates().apply(tuple, axis=1).tolist()
+        stage_map = fetch_stage_map(g["game_id"].tolist(), pairs) if args.match_context else None
+        human = load_human_context(args.human_context) if args.human_context else None
+        importance = match_importance(actions, games, stage_map=stage_map, human_context=human)
+        logger.info("Applied match-context importance (mean %.3f)", importance.mean())
+
+    board = build_v5(actions, events, games, competence, importance=importance)
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     board.to_parquet(args.output, index=False)
     logger.info("Wrote v5 for %s players → %s", len(board), args.output)
