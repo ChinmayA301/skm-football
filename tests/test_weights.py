@@ -53,6 +53,10 @@ def test_map_position_group():
     assert map_position_group("Center Attacking Midfield") == "AM"
     assert map_position_group("Left Attacking Midfield") == "W"
     assert map_position_group("Right Wing") == "W"
+    # Wide midfielders (4-4-2 wingers) are W, not CM
+    assert map_position_group("Right Midfield") == "W"
+    assert map_position_group("Left Midfield") == "W"
+    assert map_position_group("Left Center Midfield") == "CM"
     assert map_position_group("Center Forward") == "ST"
     assert map_position_group("Substitute") is None
     assert map_position_group(None) is None
