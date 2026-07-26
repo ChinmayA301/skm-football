@@ -8,12 +8,20 @@ football — built to answer a specific complaint: goals and assists reward
 the final touch, but football is a chain-reaction sport, and most of what
 decides matches happens before the ball reaches the box.
 
-SKM values every on-ball action by its downstream effect on scoring
-probability (VAEP), then adjusts for **how difficult** the action was,
-**how much the moment mattered**, and **whether it was expected of the
-player's role** — before rolling actions up into match **moments** and
-crediting every player involved, not only the one who touched the ball
-last.
+The headline metric is **competence (v4)**: every action scored against what
+a *positional peer* does with that action type, so it measures
+**position-specific competence, not attacking intent**. On 216 open-data
+matches it is fully decoupled from output — ρ(competence, goals+assists) =
+**−0.01** — and surfaces the defenders and ball-winners outcome metrics miss
+(Van Dijk, Rüdiger, Kanté rank highly with *zero* goals). **v5** layers
+context-weighted decisive actions (a low-xG comeback winner ≫ a high-xG
+tap-in), press-breaking, and match importance (opponent strength ×
+competition stage) on top.
+
+Underneath, the **value pipeline** (v1–v3) scores every on-ball action by its
+downstream effect on scoring probability (VAEP), adjusts for difficulty,
+game-state, and role, rolls actions into match **moments**, and normalizes
+players within position — feeding the competence base above.
 
 ```
 SKM_i    = ΔP_i × (1 + 0.3·D_i + 0.3·C_i + 0.3·R_i)

@@ -223,14 +223,21 @@ def build_v5(
     games: pd.DataFrame,
     competence: pd.DataFrame,
     min_actions: int = 400,
-    w_competence: float = 1.0,
+    w_competence: float = 1.2,
     w_decisive: float = 1.0,
     w_pressure: float = 0.5,
     importance: Optional[pd.Series] = None,
 ) -> pd.DataFrame:
     """Blend v4 competence with per-90 decisive-action and pressure value into
     a standardized v5 rating. All three parts are z-standardized so the blend
-    weights are interpretable and no single scale dominates."""
+    weights are interpretable and no single scale dominates.
+
+    Default weights (1.2, 1.0, 0.5) were selected by grid search against the
+    metric's own DESIGN criteria — decoupled from raw goals, position-balanced,
+    decisive + competence both contributing — NOT fitted to ground-truth
+    labels (none exist yet). The sensitivity analysis showed the conclusions
+    (|ρ(v5, goals)| < 0.1, balanced positions) are robust across all reasonable
+    weights; true fitting awaits expert/scout labels. Priors, disclosed."""
     # per-player n and rough minutes (action-count proxy, consistent with repo)
     counts = actions.groupby("player_id").size().rename("n_actions").reset_index()
     per_min = counts["n_actions"].sum() / max(len(actions) / 90.0, 1.0)
