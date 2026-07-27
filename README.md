@@ -64,6 +64,8 @@ flowchart LR
 | Moment credits (v2) | `skm-build-credits` | `player_credits.parquet`, `player_skm_v2.parquet` |
 | Real defender geometry (360) | `skm-build-360` | `D_360`, `skm_360` |
 | Position-normalized (v3) | `skm-build-phase6` | `player_skm_v3.parquet` |
+| **Competence (v4 — headline)** | `skm-build-competence` | `player_competence.parquet` |
+| **Contextual (v5)** | `skm-build-v5 [--match-context]` | `player_skm_v5.parquet` |
 | Validation | `skm-validate` | `data/reports/` (generated locally) |
 | Match replay | `skm-export-replay --game-id <id>` | Self-contained HTML with live SKM overlays |
 | CV pilot (experimental) | `skm-video-pilot --clip <clip.mp4> …` | Pitch tracks + pressure from a clip you own, gated against 360 ground truth |
@@ -92,6 +94,7 @@ Full multi-competition sample (216 matches, ~15 min):
 skm-build-events --competitions "1. Bundesliga:2023/2024,FIFA World Cup:2022,UEFA Euro:2024,Ligue 1:2022/2023,La Liga:2020/2021"
 skm-build-scores --competitions "1. Bundesliga:2023/2024,FIFA World Cup:2022,UEFA Euro:2024,Ligue 1:2022/2023,La Liga:2020/2021"
 skm-build-moments && skm-build-credits && skm-build-phase6
+skm-build-competence && skm-build-v5   # v4 headline + v5 context layers
 skm-validate && skm-export-reports
 ```
 
