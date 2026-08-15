@@ -34,8 +34,9 @@ except DataNotFoundError as exc:
     )
     st.stop()
 
-tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
+tab_comp, tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
     [
+        "⭐ Competence (v4/v5)",
         "Leaderboard",
         "Match timeline",
         "Player profile",
@@ -48,6 +49,62 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
 
 # Fixed categorical colors per moment type (validated palette; identity never cycles)
 MOMENT_COLORS = {"open_play": "#2a78d6", "transition": "#1baf7a", "set_piece": "#eda100"}
+
+with tab_comp:
+    st.subheader("Competence (v4) — position-relative, decoupled from output")
+    st.caption(
+        "Each action scored against what a *positional peer* does with that "
+        "action type. Measures position-specific competence, **not** attacking "
+        "intent — ρ(competence, goals+assists) ≈ −0.01 on the sample. "
+        "v5 layers context-weighted decisive actions + press-breaking on top."
+    )
+    try:
+        from skm.viz.loaders import load_competence, load_v5
+
+        comp = load_competence()
+        names = player_name_map(events)
+        comp["player"] = comp["player_id"].map(names)
+    except DataNotFoundError as exc:
+        st.warning(f"{exc}")
+        st.stop()
+
+    import plotly.express as px
+
+    view = st.radio("Metric", ["v4 competence", "v5 (competence + context)"], horizontal=True)
+    if view.startswith("v5"):
+        try:
+            v5 = load_v5()
+            v5["player"] = v5["player_id"].map(names)
+            v5 = v5.sort_values("skm_v5", ascending=False)
+            cols = [c for c in ["player", "pos", "skm_v5", "competence",
+                                "decisive_per90", "pressure_per90", "n_actions"] if c in v5.columns]
+            st.dataframe(v5[cols].head(50), use_container_width=True, hide_index=True)
+            st.caption("skm_v5 = z(competence) blended with context-weighted decisive "
+                       "actions and press-breaking (weights 1.2 / 1.0 / 0.5, disclosed priors).")
+        except DataNotFoundError as exc:
+            st.info(f"{exc}")
+    else:
+        show = comp.sort_values("competence", ascending=False)
+        cols = [c for c in ["player", "pos", "competence", "competence_rank", "n_actions"] if c in show.columns]
+        st.dataframe(show[cols].head(50), use_container_width=True, hide_index=True)
+
+    st.markdown("**Who each position group leads on** — pick a position to see its top competence")
+    posc = st.selectbox("Position group", sorted(comp["pos"].dropna().unique()))
+    sub = comp[comp["pos"] == posc].sort_values("competence", ascending=False).head(12)
+    st.dataframe(sub[["player", "competence", "n_actions"]], use_container_width=True, hide_index=True)
+
+    st.markdown("**Position balance of the top 40** — competence spreads across the pitch")
+    top40 = comp.sort_values("competence", ascending=False).head(40)
+    bal = top40["pos"].value_counts().reindex(
+        ["GK", "CB", "FB", "DM", "CM", "AM", "W", "ST"]
+    ).fillna(0).reset_index()
+    bal.columns = ["position", "players_in_top40"]
+    fig = px.bar(bal, x="position", y="players_in_top40",
+                 color="position", color_discrete_sequence=px.colors.qualitative.Safe)
+    fig.update_layout(showlegend=False)
+    st.plotly_chart(fig, use_container_width=True)
+    st.caption("Traditional goals+assists would fill this with strikers and wingers; "
+               "competence surfaces centre-backs and ball-winning midfielders too.")
 
 with tab1:
     st.subheader("Player leaderboard")
