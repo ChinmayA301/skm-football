@@ -4,7 +4,21 @@ Headline findings, reproducible from this repo on StatsBomb open data
 (216 matches: Bundesliga 23/24, World Cup 2022, Euro 2024, Ligue 1 22/23,
 La Liga 20/21 — 487,561 scored actions, 233 players with ≥400 actions).
 
-## The metric stack
+## The headline: SKM measures position competence, not attacking intent
+
+The founding thesis was to reward **position-specific competence and match
+context**, not goals+assists. v1–v3 (below) are the value-construction
+pipeline; **v4 competence is the metric that finally delivers the thesis**,
+and **v5 layers decisive-action + match context on top of it**.
+
+| Layer | Role | Headline result |
+|---|---|---|
+| **v4 — Competence** | **BASE** | Each action scored vs positional-peer expectation for that type. **ρ(competence, goals+assists) = −0.01** — fully decoupled from output. Surfaces Van Dijk, Rüdiger, Kanté with *zero* goals; top-40 is 16 defenders vs G+A's 8. |
+| **v5 — Contextual** | on v4 | Context-weighted decisive actions (low-xG & comeback/late/knockout weighted up) + press-breaking + match importance (opponent strength × competition stage). ρ(v5, goals) = −0.07 — decisive rewarded *within context*, not by tally. |
+
+See "Position competence vs traditional metrics" below for the full comparison.
+
+## The value pipeline underneath (v1–v3)
 
 | Version | Formula | What it adds |
 |---|---|---|
@@ -29,6 +43,47 @@ compare players within their position group. v3's correlation is barely
 positive, stated honestly rather than inflated, but the sign flip is real
 and the position leaders are face-valid: ball-playing centre-backs
 (Young-Gwon Kim, Koulibaly, Orban), Remo Freuler at DM, Yann Sommer at GK.
+
+**But v3 wasn't enough** — tested on the full 2015/16 Premier League, it
+still buried N'Golo Kanté (v1 #151 → v3 #93), because position-normalization
+re-ranks an offense-skewed value; it can't manufacture the defensive value
+the base signal never measured. That failure is what motivated v4.
+
+## Position competence vs traditional metrics
+
+v4 competence scores each action against what a positional peer does with
+that action type. On the 216-match sample it is genuinely decoupled from
+output, and surfaces the role-competent defenders and ball-winners that
+outcome metrics miss:
+
+| Competence vs… | Spearman ρ |
+|---|---|
+| Goals + Assists /90 | **−0.01** |
+| Assists /90 | −0.05 |
+| xG /90 | +0.10 |
+| Progressive actions /90 | +0.03 |
+| VAEP ΔP /90 | +0.48 |
+| SKM v1 /90 | +0.47 |
+
+**Who each metric's top-40 rewards** (position mix):
+
+| Metric | Attackers (W+ST) | Defenders (CB+FB) | Midfield |
+|---|---|---|---|
+| Goals + Assists | 28 | 8 (0 CM/DM) | 4 |
+| VAEP ΔP | 18 | 11 | 8 |
+| **Competence (v4)** | **10** | **16** | **10** |
+
+The "uncovered" players — high competence, **zero** goals+assists — are
+Van Dijk, Rüdiger, Min-jae Kim, Kanté, Kovačić, Højbjerg, Amrabat, Schär:
+centre-backs and ball-winning midfielders ranked 17th–80th by competence and
+dead-last (183rd) by output. On the same PL 2015/16 that buried Kanté in v3,
+competence lifts him to **#24**.
+
+**Honest caveats:** the very top-10 is still winger-heavy (elite dribblers
+score high vs winger peers — but with ρ(goals)≈0 it's competence, not intent);
+competence still correlates 0.48 with VAEP (a role-relative lens *on*
+possession value); goalkeepers rank via distribution. It is not claimed to
+beat VAEP/xT on any task — it answers a different question (role competence).
 
 v3 is dimensionless (peer-relative) by design — cross-position magnitude
 comparisons should use v2.

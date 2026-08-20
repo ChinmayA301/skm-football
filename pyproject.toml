@@ -20,7 +20,9 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
-    "ruff>=0.4.0",
+    # Pinned: newer ruff releases enable additional default rules (RUF015,
+    # RUF059, ...) that would fail CI while passing locally. Bump deliberately.
+    "ruff>=0.4.0,<0.16",
 ]
 model = [
     "scipy>=1.13.1,<1.15",
@@ -33,9 +35,6 @@ app = [
     "plotly>=5.18.0",
     "matplotlib>=3.8.0",
 ]
-video = [
-    "ultralytics>=8.2",
-]
 
 [project.scripts]
 skm-build-events = "skm.data.pipeline:main"
@@ -44,7 +43,8 @@ skm-build-moments = "skm.models.moments:main"
 skm-build-credits = "skm.models.credits:main"
 skm-build-360 = "skm.models.freeze_frame:main"
 skm-build-phase6 = "skm.models.phase6:main"
-skm-video-pilot = "skm.video.pilot:main"
+skm-build-competence = "skm.models.competence:main"
+skm-build-v5 = "skm.models.contextual:main"
 skm-export-reports = "skm.viz.reports:main"
 skm-export-replay = "skm.viz.replay:main"
 skm-validate = "skm.viz.validation_cli:main"

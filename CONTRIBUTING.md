@@ -24,11 +24,13 @@ skm-build-scores --max-games 5
 ./scripts/run_full_phase2.sh
 
 # optional deeper layers, in order
-skm-build-moments    # segment matches into moments
-skm-build-credits    # v2: moment-level player credits
-skm-build-360        # attach StatsBomb 360 defender geometry to difficulty
-skm-build-phase6     # v3: position-normalized ranking
-skm-export-replay --game-id <id>   # HTML match replay with live SKM overlays
+skm-build-moments      # segment matches into moments
+skm-build-credits      # v2: moment-level player credits
+skm-build-360          # attach StatsBomb 360 defender geometry to difficulty
+skm-build-phase6       # v3: position-normalized ranking
+skm-build-competence   # v4 (headline): position-relative competence
+skm-build-v5 [--match-context]   # v5: context-weighted decisive actions + pressure + match importance
+skm-export-replay --game-id <id> # HTML match replay with live SKM overlays
 ```
 
 ## Tests and lint

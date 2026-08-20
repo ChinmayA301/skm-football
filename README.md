@@ -8,12 +8,20 @@ football — built to answer a specific complaint: goals and assists reward
 the final touch, but football is a chain-reaction sport, and most of what
 decides matches happens before the ball reaches the box.
 
-SKM values every on-ball action by its downstream effect on scoring
-probability (VAEP), then adjusts for **how difficult** the action was,
-**how much the moment mattered**, and **whether it was expected of the
-player's role** — before rolling actions up into match **moments** and
-crediting every player involved, not only the one who touched the ball
-last.
+The headline metric is **competence (v4)**: every action scored against what
+a *positional peer* does with that action type, so it measures
+**position-specific competence, not attacking intent**. On 216 open-data
+matches it is fully decoupled from output — ρ(competence, goals+assists) =
+**−0.01** — and surfaces the defenders and ball-winners outcome metrics miss
+(Van Dijk, Rüdiger, Kanté rank highly with *zero* goals). **v5** layers
+context-weighted decisive actions (a low-xG comeback winner ≫ a high-xG
+tap-in), press-breaking, and match importance (opponent strength ×
+competition stage) on top.
+
+Underneath, the **value pipeline** (v1–v3) scores every on-ball action by its
+downstream effect on scoring probability (VAEP), adjusts for difficulty,
+game-state, and role, rolls actions into match **moments**, and normalizes
+players within position — feeding the competence base above.
 
 ```
 SKM_i    = ΔP_i × (1 + 0.3·D_i + 0.3·C_i + 0.3·R_i)
@@ -56,9 +64,10 @@ flowchart LR
 | Moment credits (v2) | `skm-build-credits` | `player_credits.parquet`, `player_skm_v2.parquet` |
 | Real defender geometry (360) | `skm-build-360` | `D_360`, `skm_360` |
 | Position-normalized (v3) | `skm-build-phase6` | `player_skm_v3.parquet` |
+| **Competence (v4 — headline)** | `skm-build-competence` | `player_competence.parquet` |
+| **Contextual (v5)** | `skm-build-v5 [--match-context]` | `player_skm_v5.parquet` |
 | Validation | `skm-validate` | `data/reports/` (generated locally) |
 | Match replay | `skm-export-replay --game-id <id>` | Self-contained HTML with live SKM overlays |
-| CV pilot (experimental) | `skm-video-pilot --clip <clip.mp4> …` | Pitch tracks + pressure from a clip you own, gated against 360 ground truth |
 | Dashboard | `streamlit run app/streamlit_app.py` | Interactive explorer |
 
 ---
@@ -84,6 +93,7 @@ Full multi-competition sample (216 matches, ~15 min):
 skm-build-events --competitions "1. Bundesliga:2023/2024,FIFA World Cup:2022,UEFA Euro:2024,Ligue 1:2022/2023,La Liga:2020/2021"
 skm-build-scores --competitions "1. Bundesliga:2023/2024,FIFA World Cup:2022,UEFA Euro:2024,Ligue 1:2022/2023,La Liga:2020/2021"
 skm-build-moments && skm-build-credits && skm-build-phase6
+skm-build-competence && skm-build-v5   # v4 headline + v5 context layers
 skm-validate && skm-export-reports
 ```
 
@@ -152,7 +162,6 @@ Reports write to `data/reports/` (not committed; regenerate after building score
 | [docs/CASE_STUDIES.md](docs/CASE_STUDIES.md) | Example players (validation narratives) |
 | [docs/RELATED_WORK.md](docs/RELATED_WORK.md) | VAEP, xT, and related frameworks |
 | [docs/WORKED_EXAMPLE.md](docs/WORKED_EXAMPLE.md) | One real action, fully decomposed |
-| [docs/CV_PILOT.md](docs/CV_PILOT.md) | Experimental video pipeline: clip → tracks → pressure, gated vs 360 |
 | [docs/DEPLOY.md](docs/DEPLOY.md) | Streamlit Cloud deployment |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Setup, tests, and contribution guide |
 

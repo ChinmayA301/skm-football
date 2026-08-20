@@ -117,8 +117,10 @@ def map_position_group(position_name: object) -> Optional[str]:
         return "AM" if "Center" in name else "W"
     if "Wing" in name:
         return "W"
-    if "Midfield" in name:  # Left/Right/Center Midfield
-        return "CM"
+    if "Midfield" in name:
+        # Wide midfielders (Right/Left Midfield, e.g. a 4-4-2 winger) are W;
+        # only Center Midfield variants are central (CM).
+        return "CM" if "Center" in name else "W"
     if "Forward" in name or "Striker" in name:
         return "ST"
     return None

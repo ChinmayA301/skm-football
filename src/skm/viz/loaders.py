@@ -65,6 +65,24 @@ def load_leaderboard() -> pd.DataFrame:
     return player_leaderboard(actions, games=pd.DataFrame())
 
 
+def load_competence() -> pd.DataFrame:
+    """v4 competence leaderboard (position-relative), from data/processed or bundle."""
+    name = "player_competence.parquet"
+    for path in (ACTIONS_SCORED_PARQUET.parent / name, APP_DATA / name):
+        if path.exists():
+            return pd.read_parquet(path)
+    raise DataNotFoundError(f"Missing {name}. Run: skm-build-competence")
+
+
+def load_v5() -> pd.DataFrame:
+    """v5 contextual leaderboard (competence + decisive + pressure + importance)."""
+    for name in ("player_skm_v5_mc.parquet", "player_skm_v5.parquet"):
+        for path in (ACTIONS_SCORED_PARQUET.parent / name, APP_DATA / name):
+            if path.exists():
+                return pd.read_parquet(path)
+    raise DataNotFoundError("Missing player_skm_v5*.parquet. Run: skm-build-v5")
+
+
 def player_name_map(events: Optional[pd.DataFrame] = None) -> pd.Series:
     """player_id → name. Prefers the lineup-based names parquet (covers all
     competitions); falls back to events.parquet (original sample only)."""
