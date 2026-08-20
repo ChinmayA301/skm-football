@@ -20,7 +20,9 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
-    "ruff>=0.4.0",
+    # Pinned: newer ruff releases enable additional default rules (RUF015,
+    # RUF059, ...) that would fail CI while passing locally. Bump deliberately.
+    "ruff>=0.4.0,<0.16",
 ]
 model = [
     "scipy>=1.13.1,<1.15",
