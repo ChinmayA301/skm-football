@@ -68,7 +68,6 @@ flowchart LR
 | **Contextual (v5)** | `skm-build-v5 [--match-context]` | `player_skm_v5.parquet` |
 | Validation | `skm-validate` | `data/reports/` (generated locally) |
 | Match replay | `skm-export-replay --game-id <id>` | Self-contained HTML with live SKM overlays |
-| CV pilot (experimental) | `skm-video-pilot --clip <clip.mp4> …` | Pitch tracks + pressure from a clip you own, gated against 360 ground truth |
 | Dashboard | `streamlit run app/streamlit_app.py` | Interactive explorer |
 
 ---
@@ -163,7 +162,6 @@ Reports write to `data/reports/` (not committed; regenerate after building score
 | [docs/CASE_STUDIES.md](docs/CASE_STUDIES.md) | Example players (validation narratives) |
 | [docs/RELATED_WORK.md](docs/RELATED_WORK.md) | VAEP, xT, and related frameworks |
 | [docs/WORKED_EXAMPLE.md](docs/WORKED_EXAMPLE.md) | One real action, fully decomposed |
-| [docs/CV_PILOT.md](docs/CV_PILOT.md) | Experimental video pipeline: clip → tracks → pressure, gated vs 360 |
 | [docs/DEPLOY.md](docs/DEPLOY.md) | Streamlit Cloud deployment |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Setup, tests, and contribution guide |
 

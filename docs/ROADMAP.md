@@ -63,10 +63,11 @@ proxy (acted while not ahead, late, team won), not true causal attribution.
 
 The truthful version of SKM breaks **frames / live video into SKM-specific
 "moment frames"** and generates every data point *organically* from the
-video, rather than approximating context from event feeds. The CV pilot
-(`skm.video`, [CV_PILOT.md](CV_PILOT.md)) is stage 1 of this and is **not**
-production-ready (broadcast pans break single-frame calibration; ball
-detection is weak — see the honest run write-up). Anything that can't be
+video, rather than approximating context from event feeds. A CV pilot
+(detection + tracking + pitch homography on user-owned clips) is stage 1 of
+this and is **not** production-ready — broadcast pans break single-frame
+calibration and ball detection is weak — so it is developed on a separate
+experimental branch rather than shipped here. Anything that can't be
 done cleanly on event data (true causal chains, continuous pressure
 geometry, off-ball chance creation) is scoped **here**, not faked in the
 current metric.
