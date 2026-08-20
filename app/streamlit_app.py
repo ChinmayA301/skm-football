@@ -10,7 +10,8 @@ st.title("SKM — Skill-Key Moments")
 st.caption("Chain-reaction action valuation on StatsBomb open data")
 
 try:
-    from skm.viz.loaders import DataNotFoundError, load_all, player_name_map
+    from skm.viz import loaders as _loaders
+    from skm.viz.loaders import DataNotFoundError, enrich_leaderboard
     from skm.viz.hidden_heroes import hidden_heroes_table, role_fairness_by_type
     from skm.viz.timeline import list_match_ids, match_timeline_data
     from skm.viz.player_profile import player_component_summary, list_players
@@ -24,15 +25,32 @@ except ImportError as exc:
     st.error(f"Install dependencies: pip install -e '.[app,model]' — {exc}")
     st.stop()
 
-try:
-    actions, events, board = load_all()
-except DataNotFoundError as exc:
-    st.warning(str(exc))
-    st.code(
-        "skm-build-events\npip install -e '.[model]'\nskm-build-scores",
-        language="bash",
-    )
-    st.stop()
+# Lazy + cached loading. The big parquets (actions ~15 MB / 490k rows, events
+# ~8 MB) are only read by the tabs that need them, so first paint doesn't wait
+# on them — important on Streamlit Cloud's small instances.
+@st.cache_data(show_spinner="Loading actions…")
+def get_actions():
+    return _loaders.load_actions()
+
+
+@st.cache_data(show_spinner="Loading events…")
+def get_events():
+    return _loaders.load_events()
+
+
+@st.cache_data(show_spinner=False)
+def get_names():
+    """player_id → name; prefers the tiny names parquet over events."""
+    try:
+        return _loaders.player_name_map()
+    except DataNotFoundError:
+        return _loaders.player_name_map(get_events())
+
+
+@st.cache_data(show_spinner="Loading leaderboard…")
+def get_board():
+    return enrich_leaderboard(_loaders.load_leaderboard(), events=None)
+
 
 tab_comp, tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
     [
@@ -62,7 +80,7 @@ with tab_comp:
         from skm.viz.loaders import load_competence, load_v5
 
         comp = load_competence()
-        names = player_name_map(events)
+        names = get_names()
         comp["player"] = comp["player_id"].map(names)
     except DataNotFoundError as exc:
         st.warning(f"{exc}")
@@ -109,6 +127,7 @@ with tab_comp:
 with tab1:
     st.subheader("Player leaderboard")
     min_actions = st.slider("Minimum actions", 100, 800, 400, 50)
+    board = get_board()
     show = board[board["n_actions"] >= min_actions] if "n_actions" in board.columns else board
     metric_options = [
         m
@@ -138,6 +157,7 @@ with tab1:
 
 with tab2:
     st.subheader("Cumulative SKM by match")
+    actions = get_actions()
     match_ids = list_match_ids(actions)
     mid = st.selectbox("Match", match_ids, format_func=lambda x: f"Game {x}")
     if mid:
@@ -157,6 +177,7 @@ with tab2:
 
 with tab3:
     st.subheader("Player component breakdown")
+    actions = get_actions()
     players = list_players(actions)
     labels = players.apply(
         lambda r: f"{r.get('player', r['player_id'])} ({int(r['player_id'])})",
@@ -182,18 +203,18 @@ with tab3:
 
 with tab4:
     st.subheader("Hidden influence (SKM vs xT rank)")
-    heroes = hidden_heroes_table(board, actions, events, top_n=30)
+    heroes = hidden_heroes_table(get_board(), get_actions(), get_events(), top_n=30)
     st.dataframe(heroes, use_container_width=True)
     st.caption("Higher skm_minus_xt_rank = ranked better by SKM than by xT.")
 
     st.subheader("SKM by action type (role fairness)")
-    fairness = role_fairness_by_type(actions)
+    fairness = role_fairness_by_type(get_actions())
     st.dataframe(fairness, use_container_width=True)
 
 with tab5:
     st.subheader("Validation — SKM vs benchmarks")
     min_val = st.slider("Min actions (validation)", 100, 800, 400, 50, key="val_min")
-    val_df = build_validation_table(board, events, min_actions=min_val)
+    val_df = build_validation_table(get_board(), get_events(), min_actions=min_val)
     val_ext = merge_external_benchmarks(val_df)
 
     st.markdown("**Tier 1** — SKM vs ΔP / xT (Spearman ρ)")
@@ -287,7 +308,7 @@ with tab6:
     st.markdown("**v1 vs v2 (moment credits)** — players off the diagonal move under moment sharing")
     try:
         board_v2 = load_v2_board()
-        names = player_name_map(events)
+        names = get_names()
         board_v2["player"] = board_v2["player_id"].map(names)
         fig2 = px.scatter(
             board_v2,
@@ -355,7 +376,7 @@ with tab7:
         new_pair()
     mA, mB = st.session_state["pair"]
 
-    names7 = player_name_map(events)
+    names7 = get_names()
 
     def moment_card(col, m, tag):
         col.markdown(f"### Moment {tag}")
