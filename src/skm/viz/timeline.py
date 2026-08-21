@@ -42,9 +42,9 @@ def match_timeline_data(
 
     goals = pd.DataFrame(columns=["minute", "team_id", "label"])
     if "type_id" in df.columns:
-        import socceraction.spadl as spadl
+        from skm.viz.naming import add_action_names
 
-        named = spadl.add_names(df)
+        named = add_action_names(df)
         shot_goals = named[
             named["type_name"].str.contains("shot", na=False)
             & (named["result_name"] == "success")

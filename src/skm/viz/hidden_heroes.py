@@ -11,9 +11,9 @@ from skm.viz.loaders import enrich_leaderboard, load_events, load_leaderboard
 
 def _goals_per90_from_actions(actions: pd.DataFrame) -> pd.DataFrame:
     """Goals per 90 from successful shots in SPADL actions."""
-    import socceraction.spadl as spadl
+    from skm.viz.naming import add_action_names
 
-    named = spadl.add_names(actions)
+    named = add_action_names(actions)
     goals = named[
         named["type_name"].str.contains("shot", na=False)
         & (named["result_name"] == "success")
@@ -83,11 +83,13 @@ def hidden_heroes_table(
 
 def role_fairness_by_type(actions: pd.DataFrame) -> pd.DataFrame:
     """Mean SKM by SPADL action type — check attacker bias."""
-    import socceraction.spadl as spadl
+    from skm.viz.naming import add_action_names
 
-    named = spadl.add_names(actions)
+    named = add_action_names(actions)
     return (
-        named.groupby("type_name")["skm"]
+        # observed=True: type_name is a category in the bundled data, and we
+        # only want action types that actually occur.
+        named.groupby("type_name", observed=True)["skm"]
         .agg(["mean", "count"])
         .sort_values("mean", ascending=False)
         .reset_index()

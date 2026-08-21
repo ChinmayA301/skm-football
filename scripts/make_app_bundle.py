@@ -69,7 +69,16 @@ def main() -> int:
     APP_DATA.mkdir(parents=True, exist_ok=True)
 
     actions = pd.read_parquet(DATA_PROCESSED / "actions_scored.parquet")
-    slim = _downcast(actions[[c for c in ACTIONS_COLS if c in actions.columns]].copy())
+    # Bake SPADL labels in so the deployed dashboard never needs socceraction
+    # (which pins numpy<2 and caps the deployable Python version).
+    import socceraction.spadl as spadl
+
+    named = spadl.add_names(actions)
+    for col in ("type_name", "result_name"):
+        actions[col] = named[col].astype("category")
+
+    cols = ACTIONS_COLS + ["type_name", "result_name"]
+    slim = _downcast(actions[[c for c in cols if c in actions.columns]].copy())
     slim.to_parquet(APP_DATA / "actions_scored.parquet", index=False)
 
     for name in COPY_AS_IS:

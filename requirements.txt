@@ -1,12 +1,20 @@
-# Streamlit Cloud deployment requirements (dashboard + model libs).
-# Local development should use `pip install -e '.[app,model,dev]'` instead.
-numpy==1.26.4
-pandas==2.2.2
-pyarrow==21.0.0
-scipy==1.13.1
-scikit-learn==1.4.2
-socceraction==1.5.3
-statsbombpy==1.18.0
-multimethod==1.12
-streamlit==1.50.0
-plotly==6.7.0
+# Streamlit Cloud deployment — DASHBOARD ONLY.
+#
+# The deployed app just reads the committed parquet bundle in data/app/ and
+# renders it; it never trains or rebuilds models. So the heavy modelling
+# stack (socceraction, scikit-learn, statsbombpy) is deliberately absent —
+# socceraction pins numpy<2, which caps the deployable Python version at 3.12
+# and made Streamlit Cloud's Python 3.14 builds compile pandas from source.
+# SPADL type/result labels are pre-baked into the bundle instead
+# (scripts/make_app_bundle.py + skm.viz.naming).
+#
+# Local development / rebuilding models: pip install -e '.[app,model,dev]'
+#
+# Ranges (not exact pins) so pip can pick wheels for whatever Python the
+# platform runs.
+pandas>=2.0
+numpy>=1.26
+pyarrow>=14
+scipy>=1.11
+streamlit>=1.28
+plotly>=5.18

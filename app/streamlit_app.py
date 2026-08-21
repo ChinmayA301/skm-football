@@ -2,6 +2,15 @@
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+# src-layout bootstrap: on Streamlit Cloud the repo is cloned and run in place
+# without `pip install -e .`, so make src/ importable before touching skm.*
+_SRC = Path(__file__).resolve().parent.parent / "src"
+if _SRC.is_dir() and str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+
 import streamlit as st
 
 st.set_page_config(page_title="SKM Explorer", layout="wide")

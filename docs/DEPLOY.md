@@ -26,6 +26,27 @@ git add data/app && git commit -m "Refresh app data bundle" && git push
 
 Streamlit Cloud redeploys on push.
 
+## Why `requirements.txt` is dashboard-only
+
+The deployed app only *reads* the committed bundle — it never trains models.
+So `requirements.txt` deliberately excludes `socceraction`, `scikit-learn`
+and `statsbombpy`:
+
+- `socceraction` pins `numpy<2`, which caps the deployable Python at 3.12.
+  Streamlit Cloud builds on newer Pythons (3.14 at time of writing), where
+  no `numpy<2` / `pandas 2.2` wheels exist — pip then tries to compile pandas
+  from source and the build fails.
+- The only thing the dashboard needed socceraction for was SPADL
+  `type_name` / `result_name` labels. Those are now **baked into the bundle**
+  by `scripts/make_app_bundle.py` and read via `skm.viz.naming`.
+
+So: after regenerating data, always rerun `python scripts/make_app_bundle.py`
+(it bakes the labels), and keep the deploy requirements ranges loose so pip
+can pick wheels for whatever Python the platform runs.
+
+The app also adds `src/` to `sys.path` at startup, since Streamlit Cloud runs
+the repo in place without `pip install -e .`.
+
 ## Known limits on Cloud
 
 - The **Label moments** tab appends to `data/external/expert_moment_labels.csv`
