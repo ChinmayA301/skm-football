@@ -1,5 +1,7 @@
 # Deploying the dashboard to Streamlit Cloud
 
+**Live deployment: [skm-football.streamlit.app](https://skm-football.streamlit.app/)**
+
 The app reads from `data/processed/` when present (local dev) and falls
 back to the slim committed bundle in `data/app/` (~31 MB, built by
 `scripts/make_app_bundle.py`). Streamlit Cloud clones the repo, installs
@@ -46,6 +48,23 @@ can pick wheels for whatever Python the platform runs.
 
 The app also adds `src/` to `sys.path` at startup, since Streamlit Cloud runs
 the repo in place without `pip install -e .`.
+
+## Hibernation (the app "going to sleep")
+
+Community Cloud sleeps any app with **no visitor traffic for 12 hours**; the
+next visitor sees a wake page and can restart it themselves. This is platform
+policy, not an app fault, and there is no setting to disable it on the free
+tier.
+
+Worth knowing if you plan to automate around it: a cron job that `curl`s the
+URL **does not work**. The wake page is served normally, so the ping gets an
+HTTP 200 while the app stays asleep — Community Cloud counts a session only
+when a browser opens the Streamlit websocket. Only a real (headless) browser
+load registers as traffic.
+
+The mitigation used here is documentation, not a keep-alive: the README leads
+with a screenshot so the project reads even when the app is asleep, and tells
+the visitor how to wake it.
 
 ## Known limits on Cloud
 

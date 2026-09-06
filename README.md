@@ -2,6 +2,15 @@
 
 [![CI](https://github.com/ChinmayA301/skm-football/actions/workflows/ci.yml/badge.svg)](https://github.com/ChinmayA301/skm-football/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://skm-football.streamlit.app/)
+
+### ▶ [Try the live dashboard](https://skm-football.streamlit.app/)
+
+[![SKM dashboard — the competence tab, ranking players against positional peers](docs/assets/dashboard_competence.png)](https://skm-football.streamlit.app/)
+
+<sub>Hosted on Streamlit's free tier, which sleeps after 12 hours without visitors. If you
+land on a *"this app has gone to sleep"* page, click **“Yes, get this app back up!”** —
+anyone can wake it, and it takes under a minute.</sub>
 
 An open, reproducible pipeline for **process-based player valuation** in
 football — built to answer a specific complaint: goals and assists reward
@@ -101,10 +110,12 @@ skm-validate && skm-export-reports
 
 ## The dashboard
 
-`streamlit run app/streamlit_app.py` opens seven tabs:
+Live at **[skm-football.streamlit.app](https://skm-football.streamlit.app/)**, or run it
+locally with `streamlit run app/streamlit_app.py`. Eight tabs:
 
 | Tab | What it shows |
 |---|---|
+| ⭐ Competence (v4/v5) | The headline metric — players scored against positional peers, with the top-40 position balance |
 | Leaderboard | Sortable SKM / adjusted SKM / ΔP / xT per-90 rankings |
 | Match timeline | Cumulative SKM by team across a single match |
 | Player profile | Per-player D/C/R component breakdown (radar chart) |
@@ -113,7 +124,7 @@ skm-validate && skm-export-reports
 | Moments | Moment map per match, top moments, v1-vs-v2 rank movers |
 | Label moments | Collects pairwise "which moment mattered more" judgments for the expert-preference calibration in [docs/ROADMAP.md](docs/ROADMAP.md) |
 
-To deploy this dashboard on Streamlit Cloud, see [docs/DEPLOY.md](docs/DEPLOY.md).
+To deploy your own copy on Streamlit Cloud, see [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Match replay
 
