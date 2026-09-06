@@ -13,7 +13,7 @@ and **v5 layers decisive-action + match context on top of it**.
 
 | Layer | Role | Headline result |
 |---|---|---|
-| **v4 — Competence** | **BASE** | Each action scored vs positional-peer expectation for that type. **ρ(competence, goals+assists) = −0.01** — fully decoupled from output. Surfaces Van Dijk, Rüdiger, Kanté with *zero* goals; top-40 is 16 defenders vs G+A's 8. |
+| **v4 — Competence** | **BASE** | Each action scored vs positional-peer expectation for that type. **ρ(competence, goals+assists) = −0.01** — fully decoupled from output. Surfaces Van Dijk, Rüdiger, Kanté with *zero* goals; top-40 holds 9 centre-backs vs G+A's 1. |
 | **v5 — Contextual** | on v4 | Context-weighted decisive actions (low-xG & comeback/late/knockout weighted up) + press-breaking + match importance (opponent strength × competition stage). ρ(v5, goals) = −0.07 — decisive rewarded *within context*, not by tally. |
 
 See "Position competence vs traditional metrics" below for the full comparison.
@@ -65,13 +65,23 @@ outcome metrics miss:
 | VAEP ΔP /90 | +0.48 |
 | SKM v1 /90 | +0.47 |
 
-**Who each metric's top-40 rewards** (position mix):
+**Who each metric's top-40 rewards** (position mix — regenerate with
+`python scripts/make_position_balance_chart.py`):
 
-| Metric | Attackers (W+ST) | Defenders (CB+FB) | Midfield |
-|---|---|---|---|
-| Goals + Assists | 28 | 8 (0 CM/DM) | 4 |
-| VAEP ΔP | 18 | 11 | 8 |
-| **Competence (v4)** | **10** | **16** | **10** |
+| Metric | Attackers (W+ST) | Defenders (CB+FB) | Midfield (DM+CM+AM) | GK | of which CB |
+|---|---|---|---|---|---|
+| Goals+assists /90 | 23 | 11 | 6 | 0 | 1 |
+| VAEP ΔP /90 | 18 | 11 | 8 | 3 | 3 |
+| **Competence (v4)** | **14** | **16** | **10** | 0 | **9** |
+
+The sharpest single number is the last column: ranking by output puts **one**
+centre-back in the top 40, VAEP three, competence **nine**.
+
+> **Why G+A is ranked per 90 here.** Raw goals+assists cannot rank this sample.
+> Only 30 of the 233 qualified players have more than 2 G+A and **24 are tied at
+> exactly 2**, so a "top 40 by G+A total" admits 10 of those 24 arbitrarily and
+> its position mix reflects the tie-break, not the football. Per-90 is
+> continuous, ties-free, and the like-for-like comparison against VAEP /90.
 
 The "uncovered" players — high competence, **zero** goals+assists — are
 Van Dijk, Rüdiger, Min-jae Kim, Kanté, Kovačić, Højbjerg, Amrabat, Schär:
